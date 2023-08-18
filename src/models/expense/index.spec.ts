@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js'
 import { Expense } from '.'
 
 describe('model expense tests', () => {
@@ -6,7 +7,7 @@ describe('model expense tests', () => {
       ownerId: 'owner',
       categoryId: 'foodId',
       description: 'burger',
-      cost: 13.0,
+      cost: new Decimal(13),
       paidAt: new Date()
     })
 
@@ -20,7 +21,7 @@ describe('model expense tests', () => {
         ownerId: 'owner',
         categoryId: 'foodId',
         description: '',
-        cost: 13.0
+        cost: new Decimal(13)
       })
     }).toThrow()
   })
@@ -31,7 +32,7 @@ describe('model expense tests', () => {
         ownerId: 'owner',
         categoryId: 'foodId',
         description: 'burger',
-        cost: -13.0,
+        cost: new Decimal(-13),
         paidAt: new Date()
       })
     }).toThrow()

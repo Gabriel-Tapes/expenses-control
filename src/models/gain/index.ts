@@ -1,9 +1,10 @@
+import Decimal from 'decimal.js'
 import { randomUUID as v4 } from 'node:crypto'
 
 export interface GainProps {
   id: string
   ownerId: string
-  value: number
+  value: Decimal
   createdAt: Date
   updatedAt: Date
 }
@@ -23,13 +24,13 @@ export class Gain {
     return this.props.value
   }
 
-  set value(newValue: number) {
-    if (newValue < 0)
+  set value(newValue: Decimal) {
+    if (newValue.isNegative())
       throw new Error(
         'Gain value field error: the value field must be positive'
       )
 
-    this.props.value = newValue
+    this.props.value = new Decimal(newValue)
     this.props.updatedAt = new Date()
   }
 
@@ -43,7 +44,7 @@ export class Gain {
     createdAt?: Date,
     updatedAt?: Date
   ) {
-    if (!ownerId || value < 0)
+    if (!ownerId || value.isNegative())
       throw new Error(
         'Gain value field error: the value field must be positive'
       )

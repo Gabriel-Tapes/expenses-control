@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js'
 import { randomUUID as v4 } from 'node:crypto'
 
 export interface ExpenseProps {
@@ -5,7 +6,7 @@ export interface ExpenseProps {
   ownerId: string
   categoryId: string
   description: string
-  cost: number
+  cost: Decimal
   paidAt?: Date
   createdAt: Date
   updatedAt: Date
@@ -51,9 +52,9 @@ export class Expense {
     return this.props.cost
   }
 
-  set cost(newCost: number) {
-    if (!newCost)
-      throw new Error('Expense cost error, the cost field cannot be blank')
+  set cost(newCost: Decimal) {
+    if (newCost.isNegative())
+      throw new Error('Expense cost error, the cost field cannot be negative')
 
     this.props.cost = newCost
     this.props.updatedAt = new Date()
@@ -91,7 +92,7 @@ export class Expense {
     createdAt?: Date,
     updatedAt?: Date
   ) {
-    if (!ownerId || !categoryId || !description || cost < 0)
+    if (!ownerId || !categoryId || !description || cost.isNegative())
       throw new Error('Expense blank field error: all fields must be filled')
 
     this.props = {
