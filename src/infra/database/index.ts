@@ -40,7 +40,7 @@ export const query = async (query: string, options?: QueryOptions) => {
 
     return await client.query(query, options?.values)
   } catch (err) {
-    console.error(err)
+    throw new Error(`Database Query error: ${err}`)
   } finally {
     if (client && !options?.transaction) {
       client.release()
