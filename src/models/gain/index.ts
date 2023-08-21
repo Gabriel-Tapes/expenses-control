@@ -38,6 +38,17 @@ export class Gain {
     return this.props.createdAt
   }
 
+  set updatedAt(newDate: Date) {
+    if (newDate < this.createdAt || newDate > new Date())
+      throw new Error('Invalid date')
+
+    this.props.updatedAt = this.updatedAt
+  }
+
+  get updatedAt() {
+    return this.props.updatedAt
+  }
+
   constructor(
     { ownerId, value }: Omit<GainProps, 'id' | 'createdAt' | 'updatedAt'>,
     id?: string,
