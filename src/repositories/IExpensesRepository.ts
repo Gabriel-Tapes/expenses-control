@@ -1,14 +1,22 @@
-import { Expense } from '@/models/expense'
+import { type Expense } from '@/models/expense'
+import { type EditExpenseDTO } from '@/types/DTO'
 
 export interface IExpensesRepository {
-  createExpense(ownerId: string, expense: Expense): Promise<void>
+  createExpense(expense: Expense): Promise<void>
   getExpense(ownerId: string, expenseId: string): Promise<Expense | null>
   getAllExpenses(ownerId: string): Promise<Expense[]>
-  getExpenseByDatePeriod(
+  getExpensesByDatePeriod(
     ownerId: string,
     startDate: Date,
     endDate: Date
   ): Promise<Expense[]>
-  editExpense(ownerId: string, editedExpense: Expense): Promise<Expense | null>
-  deleteExpense(ownerId: string, expense: string): Promise<void>
+  editExpense({
+    id,
+    ownerId,
+    categoryId,
+    description,
+    cost,
+    paidAt
+  }: EditExpenseDTO): Promise<Expense | null>
+  deleteExpense(ownerId: string, expenseId: string): Promise<number>
 }

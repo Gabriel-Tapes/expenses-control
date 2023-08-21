@@ -1,15 +1,10 @@
 import { Category } from '@/models/category'
 import { ICategoriesRepository } from '../ICategoriesRepository'
 import { query } from '@/infra/database'
+import { EditCategoryDTO } from '@/types/DTO'
 
 export class PostgresCategoriesRepository implements ICategoriesRepository {
   async addCategory(category: Category): Promise<void> {
-    console.table({
-      id: category.id,
-      name: category.name,
-      createdAt: category.createdAt,
-      updatedAt: category.updatedAt
-    })
     await query(
       'INSERT INTO categories (id, name, createdAt, updatedAt) VALUES ($1, $2, $3, $4)',
       {
@@ -24,7 +19,7 @@ export class PostgresCategoriesRepository implements ICategoriesRepository {
   }
   async getCategory(categoryId: string): Promise<Category | null> {
     const { rows } = await query(
-      'SELECT (name, createdAt, updatedAt) FROM categories WHERE id = $1',
+      'SELECT name, createdAt, updatedAt FROM categories WHERE id = $1',
       {
         values: [categoryId]
       }
@@ -32,7 +27,7 @@ export class PostgresCategoriesRepository implements ICategoriesRepository {
 
     if (rows.length === 0) return null
 
-    const { name, createdAt, updatedAt } = rows[0]
+    const { name, createdat: createdAt, updatedat: updatedAt } = rows[0]
 
     return new Category(
       {
@@ -43,37 +38,37 @@ export class PostgresCategoriesRepository implements ICategoriesRepository {
       updatedAt
     )
   }
-  async editCategory(editedCategory: Category): Promise<Category | null> {
+  async editCategory({ id, name }: EditCategoryDTO): Promise<Category | null> {
     const { rows } = await query(
       `
-        WITH update_category AS (
-          UPDATE categories
-          SET name = $2, createdAt = $3, updatedAt = $4
-          WHERE id = $1
-          RETURNING name, createdAt, updatedAt
-        )
-
-        SELECT true FROM update_category
-        UNION ALL
-        SELECT null 
-        WHERE NOT EXISTS (SELECT 1 FROM categories WHERE id = $1)
+        UPDATE categories
+        SET 
+          name = name, 
+          updatedAt = NOW()
+        WHERE id = $1
+        RETURNING createdAt, updatedAt
       `,
       {
-        values: [
-          editedCategory.id,
-          editedCategory.name,
-          editedCategory.createdAt,
-          editedCategory.updatedAt
-        ]
+        values: [id, name]
       }
     )
-    if (!rows[0].bool) return null
+    if (rows.length === 0) return null
 
-    return editedCategory
+    const { createdat: createdAt, updatedat: updatedAt } = rows[0]
+
+    return new Category({ name }, id, createdAt, updatedAt)
   }
-  async deleteCategory(categoryId: string): Promise<void> {
-    await query('DELETE FROM categories WHERE id = $1', {
-      values: [categoryId]
-    })
+
+  async deleteCategory(categoryId: string): Promise<number> {
+    const { rows } = await query(
+      'DELETE FROM categories WHERE id = $1 RETURNING 1',
+      {
+        values: [categoryId]
+      }
+    )
+
+    if (rows.length === 0) return 1
+
+    return 0
   }
 }

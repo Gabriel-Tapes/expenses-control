@@ -1,8 +1,9 @@
-import { Category } from '@/models/category'
+import { type Category } from '@/models/category'
+import { type EditCategoryDTO } from '@/types/DTO'
 
 export interface ICategoriesRepository {
   addCategory(category: Category): Promise<void>
   getCategory(categoryId: string): Promise<Category | null>
-  editCategory(editedCategory: Category): Promise<Category | null>
-  deleteCategory(categoryId: string): Promise<void>
+  editCategory({ id, name }: EditCategoryDTO): Promise<Category | null>
+  deleteCategory(categoryId: string): Promise<number>
 }
