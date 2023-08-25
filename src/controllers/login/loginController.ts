@@ -4,7 +4,7 @@ import { LoginDTOSchema } from '@/types/DTO'
 import { type ZodError } from 'zod'
 
 export class LoginController {
-  constructor(private loginUseCase: LoginUseCase) { }
+  constructor(private loginUseCase: LoginUseCase) {}
 
   async handle(req: NextRequest) {
     try {

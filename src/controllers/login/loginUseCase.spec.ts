@@ -2,9 +2,10 @@ import { User } from '@/models/user'
 import { InMemoryUsersRepository } from '@/repositories/inMemory'
 import { hash } from 'bcrypt'
 import { LoginUseCase } from './loginUseCase'
-import { type JwtPayload, verify } from 'jsonwebtoken'
+import { jwtVerify } from 'jose'
 
 describe('LoginUseCase tests', () => {
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET)
   const usersRepositories = new InMemoryUsersRepository()
   const userData = {
     name: 'joe',
@@ -63,7 +64,7 @@ describe('LoginUseCase tests', () => {
       password: userData.password
     })
 
-    const { id } = verify(token as string, process.env.JWT_SECRET) as JwtPayload
+    const { id } = (await jwtVerify(token as string, secret)).payload
 
     expect(id).toEqual(user.id)
   })
