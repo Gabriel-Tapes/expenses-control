@@ -69,7 +69,13 @@ export class User {
     return this.props.createdAt
   }
 
-  get updatedAt(): Date | undefined {
+  set updatedAt(newValue: Date) {
+    if (newValue < this.createdAt) throw new Error('invalid updatedAt')
+
+    this.props.updatedAt = newValue
+  }
+
+  get updatedAt(): Date {
     return this.props.updatedAt
   }
 
