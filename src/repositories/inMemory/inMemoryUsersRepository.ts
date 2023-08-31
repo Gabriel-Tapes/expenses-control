@@ -25,7 +25,7 @@ export class InMemoryUsersRepository implements IUsersRepository {
   async getUserById(id: string): Promise<User | null> {
     const index = this.data.findIndex(user => user.id === id)
 
-    return this.data[index]
+    return this.data[index] ?? null
   }
   async getUserByEmail(email: string): Promise<User | null> {
     const index = this.data.findIndex(user => user.email === email)
