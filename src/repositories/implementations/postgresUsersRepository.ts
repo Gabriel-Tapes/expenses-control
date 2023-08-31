@@ -73,7 +73,6 @@ export class PostgresUsersRepository implements IUsersRepository {
       updatedat: updatedAt
     } = rows[0]
 
-    console.info(rows[0])
     return new User(
       { name, lastName, email, password },
       id,
@@ -102,7 +101,7 @@ export class PostgresUsersRepository implements IUsersRepository {
         values: [id, name, lastName, password]
       }
     )
-    if (!rows[0].bool) return null
+    if (rows.length === 0) return null
 
     const {
       name: editedName,
