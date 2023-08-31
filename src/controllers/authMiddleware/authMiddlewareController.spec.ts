@@ -96,8 +96,6 @@ describe('AuthMiddlewareController tests', () => {
     const res = await authMiddlewareController.handle(req)
     const body = await res.json()
 
-    console.info(body)
-
     expect(res.status).toBe(500)
     expect(body.error).toBeTruthy()
     expect(body.error).toBe('An error has been occured')
