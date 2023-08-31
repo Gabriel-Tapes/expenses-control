@@ -1,7 +1,19 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
 import retry from 'async-retry'
 import { Client, Pool, type PoolConfig, type PoolClient } from 'pg'
 import { DatabaseCache, QueryOptions } from '@/types/database'
+import { resolve } from 'node:path'
+
+const envFile =
+  process.env.NODE_ENV === 'test'
+    ? '.env.test'
+    : process.env.NODE_ENV === 'production'
+    ? '.env'
+    : '.env.local'
+
+dotenv.config({
+  path: resolve(process.cwd(), envFile)
+})
 
 const config: PoolConfig = {
   host: process.env.DB_HOST,
