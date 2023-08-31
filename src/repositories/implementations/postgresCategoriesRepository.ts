@@ -43,7 +43,7 @@ export class PostgresCategoriesRepository implements ICategoriesRepository {
       `
         UPDATE categories
         SET 
-          name = name, 
+          name = $2, 
           updatedAt = NOW()
         WHERE id = $1
         RETURNING createdAt, updatedAt
