@@ -10,7 +10,6 @@ describe('AuthMiddlewareUseCase tests', () => {
   const authMiddlewareUseCase = new AuthMiddlewareUseCase()
 
   beforeAll(async () => {
-    process.env.JWT_SECRET = 'secret'
     token = await new SignJWT({ id })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('1w')

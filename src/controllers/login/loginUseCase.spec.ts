@@ -19,8 +19,6 @@ describe('LoginUseCase tests', () => {
   let loginUseCase: LoginUseCase
 
   beforeAll(async () => {
-    process.env.JWT_SECRET = 'secret'
-
     user.password = await hash(user.password, 10)
 
     await usersRepositories.createUser(user)
@@ -63,7 +61,6 @@ describe('LoginUseCase tests', () => {
       email: userData.email,
       password: userData.password
     })
-
     const { id } = (await jwtVerify(token as string, secret)).payload
 
     expect(id).toEqual(user.id)
