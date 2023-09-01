@@ -2,6 +2,7 @@ import { Gain } from '@/models/gain'
 import { IGainsRepository } from '../IGainsRepository'
 import { query } from '@/infra/database'
 import { EditGainDTO } from '@/types/DTO'
+import Decimal from 'decimal.js'
 
 export class PostgresGainsRepository implements IGainsRepository {
   async createGain(gain: Gain): Promise<void> {
@@ -11,7 +12,7 @@ export class PostgresGainsRepository implements IGainsRepository {
         values: [
           gain.id,
           gain.ownerId,
-          gain.value,
+          gain.value.toString(),
           gain.createdAt,
           gain.updatedAt
         ]
@@ -28,7 +29,12 @@ export class PostgresGainsRepository implements IGainsRepository {
 
     const { value, createdat: createdAt, updatedat: updatedAt } = rows[0]
 
-    return new Gain({ ownerId, value }, gainId, createdAt, updatedAt)
+    return new Gain(
+      { ownerId, value: new Decimal(value) },
+      gainId,
+      createdAt,
+      updatedAt
+    )
   }
   async getAllGains(ownerId: string): Promise<Gain[]> {
     const { rows } = await query(
@@ -38,7 +44,12 @@ export class PostgresGainsRepository implements IGainsRepository {
 
     return rows.map(
       ({ id, value, createdat: createdAt, updatedat: updatedAt }) =>
-        new Gain({ ownerId, value }, id, createdAt, updatedAt)
+        new Gain(
+          { ownerId, value: new Decimal(value) },
+          id,
+          createdAt,
+          updatedAt
+        )
     )
   }
   async getGainsByDatePeriod(
@@ -60,7 +71,12 @@ export class PostgresGainsRepository implements IGainsRepository {
 
     return rows.map(
       ({ id, value, createdat: createdAt, updatedat: updatedAt }) =>
-        new Gain({ ownerId, value }, id, createdAt, updatedAt)
+        new Gain(
+          { ownerId, value: new Decimal(value) },
+          id,
+          createdAt,
+          updatedAt
+        )
     )
   }
   async editGain({ id, ownerId, value }: EditGainDTO): Promise<Gain | null> {
@@ -72,7 +88,7 @@ export class PostgresGainsRepository implements IGainsRepository {
         RETURNING createdAt, updatedAt
       `,
       {
-        values: [id, ownerId, value]
+        values: [id, ownerId, value.toString()]
       }
     )
 
@@ -80,7 +96,12 @@ export class PostgresGainsRepository implements IGainsRepository {
 
     const { createdat: createdAt, updatedat: updatedAt } = rows[0]
 
-    return new Gain({ ownerId, value }, id, createdAt, updatedAt)
+    return new Gain(
+      { ownerId, value: new Decimal(value) },
+      id,
+      createdAt,
+      updatedAt
+    )
   }
   async deleteGain(ownerId: string, gainId: string): Promise<number> {
     const { rows } = await query(
