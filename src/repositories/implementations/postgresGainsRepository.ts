@@ -38,7 +38,12 @@ export class PostgresGainsRepository implements IGainsRepository {
   }
   async getAllGains(ownerId: string): Promise<Gain[]> {
     const { rows } = await query(
-      'SELECT id, value, createdAt, updatedAt FROM gains WHERE ownerId = $1',
+      `
+        SELECT id, value, createdAt, updatedAt 
+        FROM gains 
+        WHERE ownerId = $1 
+        ORDER BY createdAt DESC
+      `,
       { values: [ownerId] }
     )
 
@@ -63,8 +68,8 @@ export class PostgresGainsRepository implements IGainsRepository {
         FROM gains
         WHERE
           ownerId = $1 AND
-          createdAt >= $2 AND
-          createdAt <= $3
+          createdAt BETWEEN $2 AND $3
+        ORDER BY createdAt DESC
       `,
       { values: [ownerId, startDate, endDate] }
     )
@@ -92,7 +97,7 @@ export class PostgresGainsRepository implements IGainsRepository {
       }
     )
 
-    if (!rows[0].bool) return null
+    if (rows.length === 0) return null
 
     const { createdat: createdAt, updatedat: updatedAt } = rows[0]
 
