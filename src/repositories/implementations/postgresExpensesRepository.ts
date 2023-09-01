@@ -2,6 +2,7 @@ import { Expense } from '@/models/expense'
 import { IExpensesRepository } from '../IExpensesRepository'
 import { query } from '@/infra/database'
 import { EditExpenseDTO } from '@/types/DTO'
+import Decimal from 'decimal.js'
 
 export class PostgresExpensesRepository implements IExpensesRepository {
   async createExpense(expense: Expense): Promise<void> {
@@ -17,7 +18,7 @@ export class PostgresExpensesRepository implements IExpensesRepository {
           expense.ownerId,
           expense.categoryId,
           expense.description,
-          expense.cost,
+          expense.cost.toString(),
           expense.paidAt,
           expense.createdAt,
           expense.updatedAt
@@ -50,7 +51,7 @@ export class PostgresExpensesRepository implements IExpensesRepository {
     } = rows[0]
 
     return new Expense(
-      { ownerId, categoryId, description, cost, paidAt },
+      { ownerId, categoryId, description, cost: new Decimal(cost), paidAt },
       expenseId,
       createdAt,
       updatedAt
@@ -62,7 +63,7 @@ export class PostgresExpensesRepository implements IExpensesRepository {
         SELECT id, categoryId, description, cost, paidAt, createdAt, updatedAt 
         FROM expenses
         WHERE ownerId = $1
-        ORDER BY createdAt
+        ORDER BY createdAt DESC
       `,
       { values: [ownerId] }
     )
@@ -78,7 +79,7 @@ export class PostgresExpensesRepository implements IExpensesRepository {
         updatedat: updatedAt
       }) =>
         new Expense(
-          { ownerId, categoryId, description, cost, paidAt },
+          { ownerId, categoryId, description, cost: new Decimal(cost), paidAt },
           id,
           createdAt,
           updatedAt
@@ -113,7 +114,7 @@ export class PostgresExpensesRepository implements IExpensesRepository {
         updatedat: updatedAt
       }) =>
         new Expense(
-          { ownerId, categoryId, description, cost, paidAt },
+          { ownerId, categoryId, description, cost: new Decimal(cost), paidAt },
           id,
           createdAt,
           updatedAt
@@ -141,7 +142,7 @@ export class PostgresExpensesRepository implements IExpensesRepository {
         RETURNING categoryId, description, cost, paidAt, createdAt, updatedAt
       `,
       {
-        values: [id, ownerId, categoryId, description, cost, paidAt]
+        values: [id, ownerId, categoryId, description, cost?.toString(), paidAt]
       }
     )
 
@@ -149,8 +150,8 @@ export class PostgresExpensesRepository implements IExpensesRepository {
 
     const {
       categoryid: editedCategoryId,
-      editedDescription,
-      editedCost,
+      description: editedDescription,
+      cost: editedCost,
       paidat: editedPaidAt,
       createdat: createdAt,
       updatedat: updatedAt
@@ -161,7 +162,7 @@ export class PostgresExpensesRepository implements IExpensesRepository {
         ownerId,
         categoryId: editedCategoryId,
         description: editedDescription,
-        cost: editedCost,
+        cost: new Decimal(editedCost),
         paidAt: editedPaidAt
       },
       id,
