@@ -7,7 +7,7 @@ export interface ExpenseProps {
   categoryId: string
   description: string
   cost: Decimal
-  paidAt?: Date
+  paidAt?: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -60,12 +60,12 @@ export class Expense {
     this.props.updatedAt = new Date()
   }
 
-  get paidAt(): Date | undefined | null {
+  get paidAt() {
     return this.props.paidAt
   }
 
-  set paidAt(newPaidAt: Date | null) {
-    if (!newPaidAt)
+  set paidAt(newPaidAt: Date | null | undefined) {
+    if (newPaidAt === undefined)
       throw new Error('Expense paidAt error, the paidAt field cannot be blank')
 
     this.props.paidAt = newPaidAt
@@ -76,7 +76,7 @@ export class Expense {
     return this.props.createdAt
   }
 
-  get updatedAt(): Date | undefined {
+  get updatedAt() {
     return this.props.updatedAt
   }
 
@@ -86,7 +86,7 @@ export class Expense {
       categoryId,
       description,
       cost,
-      paidAt
+      paidAt = null
     }: Omit<ExpenseProps, 'id' | 'createdAt' | 'updatedAt'>,
     id?: string,
     createdAt?: Date,
