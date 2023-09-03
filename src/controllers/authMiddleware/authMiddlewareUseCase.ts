@@ -17,7 +17,7 @@ export class AuthMiddlewareUseCase {
       if (err instanceof errors.JWTExpired)
         return {
           error: 1,
-          message: (err as Error).message
+          message: 'token expired'
         }
 
       return {
