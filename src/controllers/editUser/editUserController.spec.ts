@@ -3,7 +3,6 @@ import { EditUserUseCase } from './editUserUseCase'
 import { IUsersRepository } from '@/repositories/IUsersRepository'
 import { EditUserController } from './editUserController'
 import { User } from '@/models/user'
-import { randomUUID } from 'crypto'
 
 describe('editUserController tests', () => {
   const user = new User({
