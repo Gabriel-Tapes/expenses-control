@@ -59,7 +59,7 @@ export class InMemoryUsersRepository implements IUsersRepository {
 
     this.data = this.data.filter(user => user.id !== userId)
 
-    if (this.data.length > initialLength) return 1
+    if (this.data.length === initialLength) return 1
 
     return 0
   }
