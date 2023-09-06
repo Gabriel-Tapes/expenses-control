@@ -69,4 +69,14 @@ export class Gain {
       updatedAt: updatedAt ?? new Date()
     }
   }
+
+  toJSON() {
+    return {
+      id: this.props.id,
+      owner: this.props.owner.toJSON(),
+      value: this.props.value,
+      createdAt: this.props.createdAt.toISOString(),
+      updatedAt: this.props.updatedAt.toISOString()
+    }
+  }
 }

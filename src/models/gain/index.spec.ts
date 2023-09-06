@@ -38,4 +38,16 @@ describe('Entity gain tests', () => {
       gain.value = new Decimal(-400)
     }).toThrow()
   })
+
+  it('should convert to JSON', () => {
+    const gain = new Gain({ owner, value: new Decimal(500) })
+
+    expect(gain.toJSON()).toEqual({
+      id: gain.id,
+      owner: gain.owner.toJSON(),
+      value: gain.value,
+      createdAt: gain.createdAt.toISOString(),
+      updatedAt: gain.updatedAt.toISOString()
+    })
+  })
 })

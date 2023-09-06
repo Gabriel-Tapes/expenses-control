@@ -47,4 +47,24 @@ describe('model expense tests', () => {
       })
     }).toThrow()
   })
+
+  it('should convert to JSON', () => {
+    const expense = new Expense({
+      owner,
+      category,
+      description: 'test expense',
+      cost: new Decimal(20)
+    })
+
+    expect(expense.toJSON()).toEqual({
+      id: expense.id,
+      owner: expense.owner.toJSON(),
+      category: expense.category.toJSON(),
+      description: expense.description,
+      cost: expense.cost,
+      paidAt: expense.paidAt,
+      createdAt: expense.createdAt.toISOString(),
+      updatedAt: expense.updatedAt.toISOString()
+    })
+  })
 })

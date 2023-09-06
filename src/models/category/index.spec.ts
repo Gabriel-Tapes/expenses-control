@@ -21,4 +21,15 @@ describe('model category tests', () => {
       category.name = ''
     }).toThrow()
   })
+
+  it('should convert to JSON', () => {
+    const category = new Category({ name: 'test' })
+
+    expect(category.toJSON()).toEqual({
+      id: category.id,
+      name: category.name,
+      createdAt: category.createdAt.toISOString(),
+      updatedAt: category.updatedAt.toISOString()
+    })
+  })
 })

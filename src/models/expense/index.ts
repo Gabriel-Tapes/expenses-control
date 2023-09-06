@@ -106,4 +106,17 @@ export class Expense {
       updatedAt: updatedAt ?? new Date()
     }
   }
+
+  toJSON() {
+    return {
+      id: this.props.id,
+      owner: this.props.owner.toJSON(),
+      category: this.props.category.toJSON(),
+      description: this.props.description,
+      cost: this.props.cost,
+      paidAt: this.props.paidAt,
+      createdAt: this.props.createdAt.toISOString(),
+      updatedAt: this.props.updatedAt.toISOString()
+    }
+  }
 }

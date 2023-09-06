@@ -47,4 +47,13 @@ export class Category {
       updatedAt: updatedAt ?? new Date()
     }
   }
+
+  toJSON() {
+    return {
+      id: this.props.id,
+      name: this.props.name,
+      createdAt: this.props.createdAt.toISOString(),
+      updatedAt: this.props.updatedAt.toISOString()
+    }
+  }
 }
