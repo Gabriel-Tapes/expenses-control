@@ -186,6 +186,38 @@ describe('PostgresExpensesRepository tests', () => {
     expect(gottenExpenses.length).toBe(0)
   })
 
+  it('should get expenses by category', async () => {
+    await expensesRepository.createExpense(expense)
+    await expensesRepository.createExpense(
+      new Expense({
+        owner: user,
+        category,
+        description: 'test2 expense',
+        cost: new Decimal(10),
+        paidAt: new Date()
+      })
+    )
+
+    const gottenExpenses = await expensesRepository.getExpensesByCategory(
+      expense.owner.id,
+      expense.category.id
+    )
+
+    expect(gottenExpenses.length).toBe(2)
+    expect(gottenExpenses[1]).toEqual(expense)
+  })
+
+  it('should return empty list if not expenses are found for category', async () => {
+    await expensesRepository.createExpense(expense)
+
+    const gottenExpenses = await expensesRepository.getExpensesByCategory(
+      user.id,
+      randomUUID()
+    )
+
+    expect(gottenExpenses.length).toBe(0)
+  })
+
   it('should edit an expense', async () => {
     await expensesRepository.createExpense(expense)
 

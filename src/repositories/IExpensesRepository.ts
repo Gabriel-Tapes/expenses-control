@@ -12,6 +12,7 @@ export interface IExpensesRepository {
     startDate: Date,
     endDate: Date
   ): Promise<Expense[]>
+  getExpensesByCategory(ownerId: string, categoryId: string): Promise<Expense[]>
   editExpense({
     id,
     ownerId,
