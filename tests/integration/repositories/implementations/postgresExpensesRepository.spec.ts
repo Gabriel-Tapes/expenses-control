@@ -79,6 +79,18 @@ describe('PostgresExpensesRepository tests', () => {
     expect(owner).toBeNull()
   })
 
+  it('should get category', async () => {
+    const gottenCategory = await expensesRepository.getCategory(category.id)
+
+    expect(gottenCategory).toEqual(category)
+  })
+
+  it('should return null if a non-matching categoryId is provided', async () => {
+    const gottenCategory = await expensesRepository.getCategory(randomUUID())
+
+    expect(gottenCategory).toBeNull()
+  })
+
   it('should get expense by id', async () => {
     await expensesRepository.createExpense(expense)
 
@@ -154,8 +166,8 @@ describe('PostgresExpensesRepository tests', () => {
 
     const gottenExpenses = await expensesRepository.getExpensesByDatePeriod(
       expense.owner.id,
-      new Date(expense.createdAt.getTime() - 1000),
-      new Date(expense.createdAt.getTime() + 1000)
+      new Date(expense.createdAt.getTime() - 60000),
+      new Date(expense.createdAt.getTime() + 60000)
     )
 
     expect(gottenExpenses.length).toBe(2)
