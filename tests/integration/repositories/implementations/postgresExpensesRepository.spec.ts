@@ -67,6 +67,18 @@ describe('PostgresExpensesRepository tests', () => {
     expect(cost).toEqual(expense.cost.toString())
   })
 
+  it('should get owner', async () => {
+    const owner = await expensesRepository.getOwner(user.id)
+
+    expect(owner).toEqual(user)
+  })
+
+  it('should return null if a non-matching ownerId is provided', async () => {
+    const owner = await expensesRepository.getOwner(randomUUID())
+
+    expect(owner).toBeNull()
+  })
+
   it('should get expense by id', async () => {
     await expensesRepository.createExpense(expense)
 
@@ -107,7 +119,8 @@ describe('PostgresExpensesRepository tests', () => {
         owner: user,
         category,
         description: 'test expense 2',
-        cost: new Decimal(20)
+        cost: new Decimal(20),
+        paidAt: new Date()
       })
     )
 
@@ -129,18 +142,27 @@ describe('PostgresExpensesRepository tests', () => {
 
   it('should get expenses by date period', async () => {
     await expensesRepository.createExpense(expense)
+    await expensesRepository.createExpense(
+      new Expense({
+        owner: user,
+        category,
+        description: 'test expense 2',
+        cost: new Decimal(20),
+        paidAt: new Date()
+      })
+    )
 
     const gottenExpenses = await expensesRepository.getExpensesByDatePeriod(
       expense.owner.id,
-      new Date(expense.createdAt.getTime() - 10),
-      new Date(expense.createdAt.getTime() + 10)
+      new Date(expense.createdAt.getTime() - 1000),
+      new Date(expense.createdAt.getTime() + 1000)
     )
 
-    expect(gottenExpenses.length).toBe(1)
-    expect(gottenExpenses[0]).toEqual(expense)
+    expect(gottenExpenses.length).toBe(2)
+    expect(gottenExpenses[1]).toEqual(expense)
   })
 
-  it('should return an empty list if not expenses are found on data period', async () => {
+  it('should return an empty list if not expenses are found on date period', async () => {
     await expensesRepository.createExpense(expense)
 
     const gottenExpenses = await expensesRepository.getExpensesByDatePeriod(
