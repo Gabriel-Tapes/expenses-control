@@ -1,8 +1,10 @@
+import Decimal from 'decimal.js'
 import { Expense } from '@/models/expense'
+import { User } from '@/models/user'
+import { Category } from '@/models/category'
 import { IExpensesRepository } from '../IExpensesRepository'
 import { query } from '@/infra/database'
 import { EditExpenseDTO } from '@/types/DTO'
-import Decimal from 'decimal.js'
 
 export class PostgresExpensesRepository implements IExpensesRepository {
   async createExpense(expense: Expense): Promise<void> {
@@ -15,8 +17,8 @@ export class PostgresExpensesRepository implements IExpensesRepository {
       {
         values: [
           expense.id,
-          expense.ownerId,
-          expense.categoryId,
+          expense.owner.id,
+          expense.category.id,
           expense.description,
           expense.cost.toString(),
           expense.paidAt,
@@ -32,59 +34,150 @@ export class PostgresExpensesRepository implements IExpensesRepository {
   ): Promise<Expense | null> {
     const { rows } = await query(
       `
-        SELECT categoryId, description, cost, createdAt, updatedAt 
-        FROM expenses 
-        WHERE ownerId = $1 and id = $2
+        SELECT
+          json_build_object(
+            'owner', json_build_object(
+              'name', users.name,
+              'lastName', users.lastname,
+              'email', users.email,
+              'password', users.password,
+              'createdAt', users.createdat,
+              'updatedAt', users.updatedat
+            ),
+            'category', json_build_object(
+              'id', categories.id,
+              'name', categories.name,
+              'createdAt', categories.createdat,
+              'updatedAt', categories.updatedat
+            ),
+            'description', expenses.description,
+            'cost', expenses.cost,
+            'paidAt', expenses.paidat,
+            'createdAt', expenses.createdat,
+            'updatedAt', expenses.updatedat
+          ) as expense
+        FROM expenses
+        INNER JOIN users
+          ON users.id = expenses.ownerid
+        INNER JOIN categories
+          ON categories.id = expenses.categoryid
+        WHERE expenses.ownerid = $1 and expenses.id = $2
+        LIMIT 1
       `,
       { values: [ownerId, expenseId] }
     )
 
     if (rows.length === 0) return null
 
-    const {
-      categoryid: categoryId,
-      description,
-      cost,
-      paidat: paidAt,
-      createdat: createdAt,
-      updatedat: updatedAt
-    } = rows[0]
+    const { owner, category, description, cost, paidAt, createdAt, updatedAt } =
+      rows[0].expense
 
     return new Expense(
-      { ownerId, categoryId, description, cost: new Decimal(cost), paidAt },
+      {
+        owner: new User(
+          {
+            name: owner.name,
+            lastName: owner.lastName,
+            email: owner.email,
+            password: owner.password
+          },
+          ownerId,
+          new Date(owner.createdAt),
+          new Date(owner.updatedAt)
+        ),
+        category: new Category(
+          { name: category.name },
+          category.id,
+          new Date(category.createdAt),
+          new Date(category.updatedAt)
+        ),
+        description,
+        cost: new Decimal(cost),
+        paidAt: paidAt ? new Date(paidAt) : null
+      },
       expenseId,
-      createdAt,
-      updatedAt
+      new Date(createdAt),
+      new Date(updatedAt)
     )
   }
   async getAllExpenses(ownerId: string): Promise<Expense[]> {
     const { rows } = await query(
       `
-        SELECT id, categoryId, description, cost, paidAt, createdAt, updatedAt 
+        SELECT
+          json_build_object(
+            'id', expenses.id,
+            'owner', json_build_object(
+              'name', users.name,
+              'lastName', users.lastname,
+              'email', users.email,
+              'password', users.password,
+              'createdAt', users.createdat,
+              'updatedAt', users.updatedat
+            ),
+            'category', json_build_object(
+              'id', categories.id,
+              'name', categories.name,
+              'createdAt', categories.createdat,
+              'updatedAt', categories.updatedat
+            ),
+            'description', expenses.description,
+            'cost', expenses.cost,
+            'paidAt', expenses.paidat,
+            'createdAt', expenses.createdat,
+            'updatedAt', expenses.updatedat
+          ) as expense
         FROM expenses
-        WHERE ownerId = $1
-        ORDER BY createdAt DESC
+        INNER JOIN users
+          ON users.id = expenses.ownerid
+        INNER JOIN categories
+          ON categories.id = expenses.categoryid
+        WHERE expenses.ownerId = $1
+        ORDER BY expenses.createdAt DESC
       `,
       { values: [ownerId] }
     )
 
-    return rows.map(
-      ({
+    return rows.map(({ expense }) => {
+      const {
         id,
-        categoryid: categoryId,
+        owner,
+        category,
         description,
         cost,
-        paidat: paidAt,
-        createdat: createdAt,
-        updatedat: updatedAt
-      }) =>
-        new Expense(
-          { ownerId, categoryId, description, cost: new Decimal(cost), paidAt },
-          id,
-          createdAt,
-          updatedAt
-        )
-    )
+        paidAt,
+        createdAt,
+        updatedAt
+      } = expense
+      return new Expense(
+        {
+          owner: new User(
+            {
+              name: owner.name,
+              lastName: owner.lastName,
+              email: owner.email,
+              password: owner.password
+            },
+            ownerId,
+            new Date(owner.createdAt),
+            new Date(owner.updatedAt)
+          ),
+          category: new Category(
+            {
+              name: category.name
+            },
+            category.id,
+            new Date(category.createdAt),
+            new Date(category.updatedAt)
+          ),
+          description,
+          cost: new Decimal(cost),
+          paidAt: paidAt ? new Date(paidAt) : null
+        },
+        id,
+        new Date(createdAt),
+        new Date(updatedAt)
+      )
+    })
   }
   async getExpensesByDatePeriod(
     ownerId: string,
@@ -93,33 +186,83 @@ export class PostgresExpensesRepository implements IExpensesRepository {
   ): Promise<Expense[]> {
     const { rows } = await query(
       `
-        SELECT id, categoryId, description, cost, paidAt, createdAt, updatedAt
+        SELECT
+          json_build_object(
+            'id', expenses.id,
+            'owner', json_build_object(
+              'name', users.name,
+              'lastName', users.lastname,
+              'email', users.email,
+              'password', users.password,
+              'createdAt', users.createdat,
+              'updatedAt', users.updatedat
+            ),
+            'category', json_build_object(
+              'id', categories.id,
+              'name', categories.name,
+              'createdAt', categories.createdat,
+              'updatedAt', categories.updatedat
+            ),
+            'description', expenses.description,
+            'cost', expenses.cost,
+            'paidAt', expenses.paidat,
+            'createdAt', expenses.createdat,
+            'updatedAt', expenses.updatedat
+          ) as expense
         FROM expenses
-        WHERE
-          ownerId = $1 AND
-          createdAt BETWEEN $2 AND $3
-        ORDER BY createdAt DESC
+        INNER JOIN users
+          ON users.id = expenses.ownerid
+        INNER JOIN categories
+          ON categories.id = expenses.categoryid
+        WHERE 
+          expenses.ownerId = $1 and
+          expenses.createdAt BETWEEN $2 and $3
+        ORDER BY expenses.createdAt DESC
       `,
       { values: [ownerId, startDate, endDate] }
     )
 
-    return rows.map(
-      ({
+    return rows.map(({ expense }) => {
+      const {
         id,
-        categoryid: categoryId,
+        owner,
+        category,
         description,
         cost,
-        paidat: paidAt,
-        createdat: createdAt,
-        updatedat: updatedAt
-      }) =>
-        new Expense(
-          { ownerId, categoryId, description, cost: new Decimal(cost), paidAt },
-          id,
-          createdAt,
-          updatedAt
-        )
-    )
+        paidAt,
+        createdAt,
+        updatedAt
+      } = expense
+      return new Expense(
+        {
+          owner: new User(
+            {
+              name: owner.name,
+              lastName: owner.lastName,
+              email: owner.email,
+              password: owner.password
+            },
+            ownerId,
+            new Date(owner.createdAt),
+            new Date(owner.updatedAt)
+          ),
+          category: new Category(
+            {
+              name: category.name
+            },
+            category.id,
+            new Date(category.createdAt),
+            new Date(category.updatedAt)
+          ),
+          description,
+          cost: new Decimal(cost),
+          paidAt: paidAt ? new Date(paidAt) : null
+        },
+        id,
+        new Date(createdAt),
+        new Date(updatedAt)
+      )
+    })
   }
   async editExpense({
     id,
@@ -139,7 +282,32 @@ export class PostgresExpensesRepository implements IExpensesRepository {
           paidAt = COALESCE($6, paidAt),
           updatedAt = NOW()
         WHERE id = $1 and ownerId = $2
-        RETURNING categoryId, description, cost, paidAt, createdAt, updatedAt
+        RETURNING
+          (
+            SELECT json_build_object(
+              'name', users.name,
+              'lastName', users.lastname,
+              'email', users.email,
+              'password', users.password,
+              'createdAt', users.createdat,
+              'updatedAt', users.updatedat
+            )
+            FROM users
+          ) as owner,
+          (
+            SELECT json_build_object(
+              'id', categories.id,
+              'name', categories.name,
+              'createdAt', categories.createdat,
+              'updatedAt', categories.updatedat
+            )
+            FROM categories
+          ) as category, 
+          description, 
+          cost, 
+          paidAt, 
+          createdAt, 
+          updatedAt
       `,
       {
         values: [id, ownerId, categoryId, description, cost?.toString(), paidAt]
@@ -149,7 +317,8 @@ export class PostgresExpensesRepository implements IExpensesRepository {
     if (rows.length === 0) return null
 
     const {
-      categoryid: editedCategoryId,
+      owner,
+      category,
       description: editedDescription,
       cost: editedCost,
       paidat: editedPaidAt,
@@ -159,15 +328,30 @@ export class PostgresExpensesRepository implements IExpensesRepository {
 
     return new Expense(
       {
-        ownerId,
-        categoryId: editedCategoryId,
+        owner: new User(
+          {
+            name: owner.name,
+            lastName: owner.lastName,
+            email: owner.email,
+            password: owner.password
+          },
+          ownerId,
+          new Date(owner.createdAt),
+          new Date(owner.updatedAt)
+        ),
+        category: new Category(
+          { name: category.name },
+          categoryId ?? category.id,
+          new Date(category.createdAt),
+          new Date(category.updatedAt)
+        ),
         description: editedDescription,
         cost: new Decimal(editedCost),
-        paidAt: editedPaidAt
+        paidAt: editedPaidAt ? new Date(editedPaidAt) : null
       },
       id,
-      createdAt,
-      updatedAt
+      new Date(createdAt),
+      new Date(updatedAt)
     )
   }
   async deleteExpense(ownerId: string, expenseId: string): Promise<number> {

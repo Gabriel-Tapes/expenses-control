@@ -1,10 +1,12 @@
 import Decimal from 'decimal.js'
 import { randomUUID as v4 } from 'node:crypto'
+import { type Category } from '@/models/category'
+import { type User } from '@/models/user'
 
 export interface ExpenseProps {
   id: string
-  ownerId: string
-  categoryId: string
+  owner: User
+  category: Category
   description: string
   cost: Decimal
   paidAt?: Date | null
@@ -19,18 +21,16 @@ export class Expense {
     return this.props.id
   }
 
-  get ownerId() {
-    return this.props.ownerId
+  get owner() {
+    return this.props.owner
   }
 
-  get categoryId() {
-    return this.props.categoryId
+  get category() {
+    return this.props.category
   }
 
-  set categoryId(newCategory: string) {
-    if (!newCategory) throw new Error('Invalid new blank category')
-
-    this.props.categoryId = newCategory
+  set categoryId(newCategory: Category) {
+    this.props.category = newCategory
     this.props.updatedAt = new Date()
   }
 
@@ -82,8 +82,8 @@ export class Expense {
 
   constructor(
     {
-      ownerId,
-      categoryId,
+      owner,
+      category,
       description,
       cost,
       paidAt = null
@@ -92,13 +92,13 @@ export class Expense {
     createdAt?: Date,
     updatedAt?: Date
   ) {
-    if (!ownerId || !categoryId || !description || cost.isNegative())
+    if (!owner || !category || !description || cost.isNegative())
       throw new Error('Expense blank field error: all fields must be filled')
 
     this.props = {
       id: id ?? v4(),
-      categoryId,
-      ownerId,
+      category,
+      owner,
       description,
       cost,
       paidAt,

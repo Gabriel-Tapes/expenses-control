@@ -13,10 +13,17 @@ import { getNewClient } from '@/infra/database'
 
 describe('PostgresExpensesRepository tests', () => {
   const expensesRepository = new PostgresExpensesRepository()
+  const user = new User({
+    name: 'joe',
+    lastName: 'doe',
+    email: 'joe.doe@exemple.com',
+    password: '12345678'
+  })
+  const category = new Category({ name: 'test' })
   const expense = new Expense({
-    ownerId: randomUUID(),
-    categoryId: randomUUID(),
-    description: 'test',
+    owner: user,
+    category,
+    description: 'test expense',
     cost: new Decimal(25)
   })
 
@@ -26,21 +33,9 @@ describe('PostgresExpensesRepository tests', () => {
     const usersRepository = new PostgresUsersRepository()
     const categoriesRepository = new PostgresCategoriesRepository()
 
-    await usersRepository.createUser(
-      new User(
-        {
-          name: 'joe',
-          lastName: 'doe',
-          email: 'joe.doe@exemple.com',
-          password: '12345678'
-        },
-        expense.ownerId
-      )
-    )
+    await usersRepository.createUser(user)
 
-    await categoriesRepository.addCategory(
-      new Category({ name: 'test' }, expense.categoryId)
-    )
+    await categoriesRepository.addCategory(category)
 
     client = await getNewClient()
   })
@@ -61,7 +56,7 @@ describe('PostgresExpensesRepository tests', () => {
 
     const { rows } = await client.query(
       'SELECT description, cost FROM expenses WHERE id = $1 and ownerId = $2 LIMIT 1',
-      [expense.id, expense.ownerId]
+      [expense.id, expense.owner.id]
     )
 
     expect(rows.length).toBe(1)
@@ -76,7 +71,7 @@ describe('PostgresExpensesRepository tests', () => {
     await expensesRepository.createExpense(expense)
 
     const gottenExpense = await expensesRepository.getExpense(
-      expense.ownerId,
+      expense.owner.id,
       expense.id
     )
 
@@ -87,7 +82,7 @@ describe('PostgresExpensesRepository tests', () => {
     await expensesRepository.createExpense(expense)
 
     const gottenExpense = await expensesRepository.getExpense(
-      expense.ownerId,
+      expense.owner.id,
       randomUUID()
     )
 
@@ -109,15 +104,15 @@ describe('PostgresExpensesRepository tests', () => {
     await expensesRepository.createExpense(expense)
     await expensesRepository.createExpense(
       new Expense({
-        ownerId: expense.ownerId,
-        categoryId: expense.categoryId,
-        description: 'test2',
+        owner: user,
+        category,
+        description: 'test expense 2',
         cost: new Decimal(20)
       })
     )
 
     const gottenExpenses = await expensesRepository.getAllExpenses(
-      expense.ownerId
+      expense.owner.id
     )
 
     expect(gottenExpenses.length).toBe(2)
@@ -126,7 +121,7 @@ describe('PostgresExpensesRepository tests', () => {
 
   it('should return an empty list if no expenses are found', async () => {
     const gottenExpenses = await expensesRepository.getAllExpenses(
-      expense.ownerId
+      expense.owner.id
     )
 
     expect(gottenExpenses).toEqual([])
@@ -136,7 +131,7 @@ describe('PostgresExpensesRepository tests', () => {
     await expensesRepository.createExpense(expense)
 
     const gottenExpenses = await expensesRepository.getExpensesByDatePeriod(
-      expense.ownerId,
+      expense.owner.id,
       new Date(expense.createdAt.getTime() - 10),
       new Date(expense.createdAt.getTime() + 10)
     )
@@ -149,7 +144,7 @@ describe('PostgresExpensesRepository tests', () => {
     await expensesRepository.createExpense(expense)
 
     const gottenExpenses = await expensesRepository.getExpensesByDatePeriod(
-      expense.ownerId,
+      expense.owner.id,
       new Date(expense.createdAt.getTime() - 20),
       new Date(expense.createdAt.getTime() - 10)
     )
@@ -174,7 +169,7 @@ describe('PostgresExpensesRepository tests', () => {
 
     const editedExpense = await expensesRepository.editExpense({
       id: expense.id,
-      ownerId: expense.ownerId,
+      ownerId: expense.owner.id,
       description: 'edited description',
       cost: new Decimal(50),
       paidAt: new Date()
@@ -191,7 +186,7 @@ describe('PostgresExpensesRepository tests', () => {
 
     const editedExpense = await expensesRepository.editExpense({
       id: randomUUID(),
-      ownerId: expense.ownerId,
+      ownerId: expense.owner.id,
       description: 'edited description',
       cost: new Decimal(50),
       paidAt: new Date()
@@ -218,7 +213,7 @@ describe('PostgresExpensesRepository tests', () => {
     await expensesRepository.createExpense(expense)
 
     const error = await expensesRepository.deleteExpense(
-      expense.ownerId,
+      expense.owner.id,
       expense.id
     )
 
@@ -229,7 +224,7 @@ describe('PostgresExpensesRepository tests', () => {
     await expensesRepository.createExpense(expense)
 
     const error = await expensesRepository.deleteExpense(
-      expense.ownerId,
+      expense.owner.id,
       randomUUID()
     )
 
