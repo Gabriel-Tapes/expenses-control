@@ -23,7 +23,7 @@ describe('GetUserController tests', () => {
     const body = await res.json()
 
     expect(res.status).toBe(200)
-    expect(body.user.email).toEqual(user.email)
+    expect(body).toEqual({ user: user.toJSON() })
   })
 
   it('should return status 404 if not found user', async () => {

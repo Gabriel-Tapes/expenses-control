@@ -20,11 +20,11 @@ describe('editUserController tests', () => {
     })
 
     const res = await editUserController.handle(req)
-
     const body = await res.json()
 
     expect(res.status).toBe(200)
     expect(body.user.id).toEqual(user.id)
+    expect(body.user).not.toHaveProperty('password')
   })
 
   it('should return status 404 if not user found', async () => {

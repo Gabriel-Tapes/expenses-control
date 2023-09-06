@@ -31,16 +31,7 @@ export class EditUserController {
           { status: 404 }
         )
 
-      return NextResponse.json({
-        user: {
-          id,
-          name: editedUser.name,
-          lastName: editedUser.lastName,
-          email: editedUser.email,
-          createdAt: editedUser.createdAt,
-          updatedAt: editedUser.updatedAt
-        }
-      })
+      return NextResponse.json({ user: editedUser })
     } catch (err) {
       if ((err as Error).name === 'ZodError')
         return NextResponse.json(

@@ -18,19 +18,7 @@ export class CreateUserController {
         password
       })
 
-      return NextResponse.json(
-        {
-          user: {
-            id: user.id,
-            name: user.name,
-            lastName: user.lastName,
-            email: user.email,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
-          }
-        },
-        { status: 201 }
-      )
+      return NextResponse.json({ user }, { status: 201 })
     } catch (err) {
       if ((err as Error).name === 'ZodError')
         return NextResponse.json(

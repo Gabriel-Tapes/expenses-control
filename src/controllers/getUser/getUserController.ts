@@ -15,16 +15,7 @@ export class GetUserController {
       if (!user)
         return NextResponse.json({ error: 'user not found' }, { status: 404 })
 
-      return NextResponse.json({
-        user: {
-          id: user.id,
-          name: user.name,
-          lastName: user.lastName,
-          email: user.email,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt
-        }
-      })
+      return NextResponse.json({ user })
     } catch (err) {
       if ((err as Error).name === 'ZodError')
         return NextResponse.json(

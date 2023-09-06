@@ -31,14 +31,7 @@ describe('CreateUserController tests', () => {
 
     expect(res.status).toBe(201)
     expect(body.user).toBeTruthy()
-    expect(body.user).toEqual({
-      id: user.id,
-      name: user.name,
-      lastName: user.lastName,
-      email: user.email,
-      createdAt: user.createdAt.toISOString(),
-      updatedAt: user.updatedAt?.toISOString()
-    })
+    expect(body).toEqual({ user: user.toJSON() })
   })
 
   it('should return errors and status 400 without some data', async () => {
