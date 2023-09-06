@@ -11,24 +11,20 @@ import { User } from '@/models/user'
 
 describe('PostgresGainsRepository tests', () => {
   const gainsRepository = new PostgresGainsRepository()
-  const gain = new Gain({ ownerId: randomUUID(), value: new Decimal(700) })
+  const user = new User({
+    name: 'joe',
+    lastName: 'doe',
+    email: 'joe.doe@exemple.com',
+    password: '12345678'
+  })
+  const gain = new Gain({ owner: user, value: new Decimal(700) })
 
   let client: Client
 
   beforeAll(async () => {
     const usersRepository = new PostgresUsersRepository()
 
-    await usersRepository.createUser(
-      new User(
-        {
-          name: 'joe',
-          lastName: 'doe',
-          email: 'joe.doe@exemple.com',
-          password: '12345678'
-        },
-        gain.ownerId
-      )
-    )
+    await usersRepository.createUser(user)
     client = await getNewClient()
   })
 
@@ -47,7 +43,7 @@ describe('PostgresGainsRepository tests', () => {
 
     const { rows } = await client.query(
       'SELECT value FROM gains WHERE id = $1 AND ownerId = $2 limit 1',
-      [gain.id, gain.ownerId]
+      [gain.id, gain.owner.id]
     )
 
     expect(rows.length).toBe(1)
@@ -60,7 +56,7 @@ describe('PostgresGainsRepository tests', () => {
   it('should get gain by id', async () => {
     await gainsRepository.createGain(gain)
 
-    const gottenGain = await gainsRepository.getGain(gain.ownerId, gain.id)
+    const gottenGain = await gainsRepository.getGain(gain.owner.id, gain.id)
 
     expect(gottenGain).toEqual(gain)
   })
@@ -68,7 +64,10 @@ describe('PostgresGainsRepository tests', () => {
   it('should return null if an non-matching id is provided', async () => {
     await gainsRepository.createGain(gain)
 
-    const gottenGain = await gainsRepository.getGain(gain.ownerId, randomUUID())
+    const gottenGain = await gainsRepository.getGain(
+      gain.owner.id,
+      randomUUID()
+    )
 
     expect(gottenGain).toBeNull()
   })
@@ -85,19 +84,19 @@ describe('PostgresGainsRepository tests', () => {
     await gainsRepository.createGain(gain)
     await gainsRepository.createGain(
       new Gain({
-        ownerId: gain.ownerId,
+        owner: user,
         value: new Decimal(400)
       })
     )
 
-    const gottenGains = await gainsRepository.getAllGains(gain.ownerId)
+    const gottenGains = await gainsRepository.getAllGains(gain.owner.id)
 
     expect(gottenGains.length).toBe(2)
     expect(gottenGains[1]).toEqual(gain)
   })
 
   it('should return an empty list if no gains are found', async () => {
-    const gottenGains = await gainsRepository.getAllGains(gain.ownerId)
+    const gottenGains = await gainsRepository.getAllGains(gain.owner.id)
 
     expect(gottenGains).toEqual([])
   })
@@ -106,7 +105,7 @@ describe('PostgresGainsRepository tests', () => {
     await gainsRepository.createGain(gain)
 
     const gottenGains = await gainsRepository.getGainsByDatePeriod(
-      gain.ownerId,
+      gain.owner.id,
       new Date(gain.createdAt.getTime() - 10),
       new Date(gain.createdAt.getTime() + 10)
     )
@@ -119,7 +118,7 @@ describe('PostgresGainsRepository tests', () => {
     await gainsRepository.createGain(gain)
 
     const gottenGains = await gainsRepository.getGainsByDatePeriod(
-      gain.ownerId,
+      gain.owner.id,
       new Date(gain.createdAt.getTime() - 20),
       new Date(gain.createdAt.getTime() - 10)
     )
@@ -144,7 +143,7 @@ describe('PostgresGainsRepository tests', () => {
 
     const editedGain = await gainsRepository.editGain({
       id: gain.id,
-      ownerId: gain.ownerId,
+      ownerId: gain.owner.id,
       value: new Decimal(500)
     })
 
@@ -158,7 +157,7 @@ describe('PostgresGainsRepository tests', () => {
 
     const editedGain = await gainsRepository.editGain({
       id: randomUUID(),
-      ownerId: gain.ownerId,
+      ownerId: gain.owner.id,
       value: new Decimal(50)
     })
 
@@ -180,7 +179,7 @@ describe('PostgresGainsRepository tests', () => {
   it('should return 0 if gain found and deleted', async () => {
     await gainsRepository.createGain(gain)
 
-    const error = await gainsRepository.deleteGain(gain.ownerId, gain.id)
+    const error = await gainsRepository.deleteGain(gain.owner.id, gain.id)
 
     expect(error).toBe(0)
   })
@@ -188,7 +187,7 @@ describe('PostgresGainsRepository tests', () => {
   it('should return 1 if a non-matching id is provided on deleting', async () => {
     await gainsRepository.createGain(gain)
 
-    const error = await gainsRepository.deleteGain(gain.ownerId, randomUUID())
+    const error = await gainsRepository.deleteGain(gain.owner.id, randomUUID())
 
     expect(error).toBe(1)
   })

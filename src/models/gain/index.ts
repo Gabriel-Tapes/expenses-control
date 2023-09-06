@@ -1,9 +1,10 @@
 import Decimal from 'decimal.js'
 import { randomUUID as v4 } from 'node:crypto'
+import { type User } from '@/models/user'
 
 export interface GainProps {
   id: string
-  ownerId: string
+  owner: User
   value: Decimal
   createdAt: Date
   updatedAt: Date
@@ -16,8 +17,8 @@ export class Gain {
     return this.props.id
   }
 
-  get ownerId() {
-    return this.props.ownerId
+  get owner() {
+    return this.props.owner
   }
 
   get value() {
@@ -50,19 +51,19 @@ export class Gain {
   }
 
   constructor(
-    { ownerId, value }: Omit<GainProps, 'id' | 'createdAt' | 'updatedAt'>,
+    { owner, value }: Omit<GainProps, 'id' | 'createdAt' | 'updatedAt'>,
     id?: string,
     createdAt?: Date,
     updatedAt?: Date
   ) {
-    if (!ownerId || value.isNegative())
+    if (value.isNegative())
       throw new Error(
         'Gain value field error: the value field must be positive'
       )
 
     this.props = {
       id: id || v4(),
-      ownerId,
+      owner,
       value,
       createdAt: createdAt ?? new Date(),
       updatedAt: updatedAt ?? new Date()

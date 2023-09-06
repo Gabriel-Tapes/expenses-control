@@ -1,10 +1,17 @@
 import Decimal from 'decimal.js'
 import { Gain } from '.'
+import { User } from '@/models/user'
 
 describe('Entity gain tests', () => {
+  const owner = new User({
+    name: 'joe',
+    lastName: 'doe',
+    email: 'joe.doe@exemple.com',
+    password: '12345678'
+  })
   it('should be able to create an instance', () => {
     const gain = new Gain({
-      ownerId: 'owner',
+      owner,
       value: new Decimal(400)
     })
 
@@ -15,7 +22,7 @@ describe('Entity gain tests', () => {
   it('should not be able to create a gain with negative value', () => {
     expect(() => {
       return new Gain({
-        ownerId: 'owner',
+        owner,
         value: new Decimal(-400)
       })
     }).toThrow()
@@ -23,7 +30,7 @@ describe('Entity gain tests', () => {
 
   it('should not be able to set a negative value to value field', () => {
     const gain = new Gain({
-      ownerId: 'owner',
+      owner,
       value: new Decimal(400)
     })
 
