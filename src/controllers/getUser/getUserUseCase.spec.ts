@@ -1,17 +1,10 @@
 import { InMemoryUsersRepository } from '@/repositories/inMemory'
 import { GetUserUseCase } from './getUserUseCase'
-import { User } from '@/models/user'
+import { user } from '@tests/utils'
 
 describe('GetUserUseCase tests', () => {
   const usersRepository = new InMemoryUsersRepository()
   const getUserUseCase = new GetUserUseCase(usersRepository)
-
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
 
   beforeAll(async () => {
     await usersRepository.createUser(user)

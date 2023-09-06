@@ -1,15 +1,9 @@
-import { User } from '@/models/user'
 import { InMemoryUsersRepository } from '@/repositories/inMemory'
 import { DeleteUserUseCase } from './deleteUserUseCase'
+import { user } from '@tests/utils'
 
 describe('DeleteUserUseCase tests', () => {
   const usersRepository = new InMemoryUsersRepository()
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
   const deleteUserUseCase = new DeleteUserUseCase(usersRepository)
 
   beforeEach(async () => {

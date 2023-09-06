@@ -7,25 +7,11 @@ import {
   PostgresExpensesRepository,
   PostgresUsersRepository
 } from '@/repositories/implementations'
-import { User } from '@/models/user'
-import { Category } from '@/models/category'
 import { getNewClient } from '@/infra/database'
+import { user, category, expense } from '@tests/utils'
 
 describe('PostgresExpensesRepository tests', () => {
   const expensesRepository = new PostgresExpensesRepository()
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
-  const category = new Category({ name: 'test' })
-  const expense = new Expense({
-    owner: user,
-    category,
-    description: 'test expense',
-    cost: new Decimal(25)
-  })
 
   let client: Client
 
@@ -155,19 +141,23 @@ describe('PostgresExpensesRepository tests', () => {
   it('should get expenses by date period', async () => {
     await expensesRepository.createExpense(expense)
     await expensesRepository.createExpense(
-      new Expense({
-        owner: user,
-        category,
-        description: 'test expense 2',
-        cost: new Decimal(20),
-        paidAt: new Date()
-      })
+      new Expense(
+        {
+          owner: user,
+          category,
+          description: 'test expense 2',
+          cost: new Decimal(20),
+          paidAt: new Date()
+        },
+        undefined,
+        new Date(expense.createdAt.getTime() + 5)
+      )
     )
 
     const gottenExpenses = await expensesRepository.getExpensesByDatePeriod(
       expense.owner.id,
-      new Date(expense.createdAt.getTime() - 60000),
-      new Date(expense.createdAt.getTime() + 60000)
+      new Date(expense.createdAt.getTime() - 10),
+      new Date(expense.createdAt.getTime() + 10)
     )
 
     expect(gottenExpenses.length).toBe(2)

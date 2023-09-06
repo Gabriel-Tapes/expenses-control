@@ -1,20 +1,10 @@
-import { User } from '@/models/user'
-import { NextRequest } from 'next/server'
 import { LoginUseCase } from './loginUseCase'
 import { LoginController } from './loginController'
 import { IUsersRepository } from '@/repositories/IUsersRepository'
 import { LoginDTO } from '@/types/DTO'
+import { user, req } from '@tests/utils'
 
 describe('LoginController tests', () => {
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
-
-  const req = {} as NextRequest
-
   let loginUseCase: LoginUseCase
   let loginController: LoginController
 

@@ -1,21 +1,11 @@
-import { NextRequest } from 'next/server'
 import { GetUserUseCase } from './getUserUseCase'
 import { IUsersRepository } from '@/repositories/IUsersRepository'
 import { GetUserController } from './getUserController'
-import { User } from '@/models/user'
+import { user, req } from '@tests/utils'
 
 describe('GetUserController tests', () => {
-  const req = { headers: new Headers() } as NextRequest
-
   const getUserUseCase = new GetUserUseCase({} as IUsersRepository)
   const getUserController = new GetUserController(getUserUseCase)
-
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
 
   beforeEach(() => {
     req.headers.set('userId', user.id)

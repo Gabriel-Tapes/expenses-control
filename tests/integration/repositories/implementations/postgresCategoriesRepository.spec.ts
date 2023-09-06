@@ -3,11 +3,10 @@ import { Category } from '@/models/category'
 import { PostgresCategoriesRepository } from '@/repositories/implementations'
 import { randomUUID } from 'crypto'
 import { type Client } from 'pg'
+import { category } from '@tests/utils'
 
 describe('PostgresCategoriesRepository tests', () => {
   const categoriesRepository = new PostgresCategoriesRepository()
-  const category = new Category({ name: 'test' })
-
   let client: Client
 
   beforeAll(async () => {

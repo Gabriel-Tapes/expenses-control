@@ -1,8 +1,8 @@
 import { randomUUID } from 'crypto'
-import { type NextRequest } from 'next/server'
 import { DeleteUserUseCase } from './deleteUserUseCase'
 import { DeleteUserController } from './deleteUserController'
 import { IUsersRepository } from '@/repositories/IUsersRepository'
+import { req } from '@tests/utils'
 
 describe('DeleteUserController tests', () => {
   const deleteUserUseCase = new DeleteUserUseCase({} as IUsersRepository)
@@ -10,9 +10,6 @@ describe('DeleteUserController tests', () => {
 
   const userId = randomUUID()
 
-  const req = {
-    headers: new Headers()
-  } as NextRequest
   beforeEach(() => {
     deleteUserUseCase.execute = jest.fn().mockImplementation(async id => {
       if (id === userId) return 0

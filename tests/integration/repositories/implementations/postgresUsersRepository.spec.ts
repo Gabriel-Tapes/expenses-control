@@ -1,19 +1,12 @@
-import { User } from '@/models/user'
 import { PostgresUsersRepository } from '@/repositories/implementations'
 import { getNewClient } from '@/infra/database'
 import { type Client } from 'pg'
 import { randomUUID } from 'crypto'
+import { user } from '@tests/utils'
 
 describe('PostgresUsersRepository tests', () => {
   const usersRepository = new PostgresUsersRepository()
   let client: Client
-
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
 
   beforeAll(async () => {
     client = await getNewClient()

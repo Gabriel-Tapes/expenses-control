@@ -1,15 +1,8 @@
-import { User } from '@/models/user'
 import { InMemoryUsersRepository } from '@/repositories/inMemory'
 import { EditUserUseCase } from './editUserUseCase'
+import { user } from '@tests/utils'
 
 describe('EditUserUseCase tests', () => {
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
-
   let usersRepository: InMemoryUsersRepository
   let editUserUseCase: EditUserUseCase
 

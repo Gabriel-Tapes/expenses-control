@@ -1,19 +1,9 @@
 import { randomUUID } from 'crypto'
-import { type NextRequest } from 'next/server'
-import { User } from '@/models/user'
 import { PostgresUsersRepository } from '@/repositories/implementations'
 import { getUserController } from '@/controllers/getUser'
+import { user, req } from '@tests/utils'
 
 describe('GetUserController tests', () => {
-  const req = { headers: new Headers() } as NextRequest
-
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
-
   const usersRepository = new PostgresUsersRepository()
 
   beforeAll(async () => {

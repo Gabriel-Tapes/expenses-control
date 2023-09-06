@@ -1,22 +1,12 @@
-import { User } from '@/models/user'
-import { NextRequest } from 'next/server'
 import { loginController } from '@/controllers/login'
 import { PostgresUsersRepository } from '@/repositories/implementations'
 import { hash } from 'bcrypt'
+import { user, req } from '@tests/utils'
 
 describe('LoginController integration tests', () => {
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
-
   const password = user.password
 
   const usersRepository = new PostgresUsersRepository()
-
-  const req = {} as NextRequest
 
   beforeAll(async () => {
     user.password = await hash(user.password, 10)

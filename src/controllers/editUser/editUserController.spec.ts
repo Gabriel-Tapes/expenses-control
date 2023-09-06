@@ -1,20 +1,9 @@
-import { NextRequest } from 'next/server'
 import { EditUserUseCase } from './editUserUseCase'
 import { IUsersRepository } from '@/repositories/IUsersRepository'
 import { EditUserController } from './editUserController'
-import { User } from '@/models/user'
+import { user, req } from '@tests/utils'
 
 describe('editUserController tests', () => {
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
-  const req = {
-    headers: new Headers()
-  } as NextRequest
-
   const editUserUseCase = new EditUserUseCase({} as IUsersRepository)
   const editUserController = new EditUserController(editUserUseCase)
 

@@ -7,18 +7,10 @@ import {
   PostgresUsersRepository
 } from '@/repositories/implementations'
 import { getNewClient } from '@/infra/database'
-import { User } from '@/models/user'
+import { user, gain } from '@tests/utils'
 
 describe('PostgresGainsRepository tests', () => {
   const gainsRepository = new PostgresGainsRepository()
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
-  const gain = new Gain({ owner: user, value: new Decimal(700) })
-
   let client: Client
 
   beforeAll(async () => {

@@ -1,19 +1,9 @@
-import { User } from '@/models/user'
 import { createUserController } from '@/controllers/createUser'
-import { type NextRequest } from 'next/server'
 import { getNewClient } from '@/infra/database'
 import { Client } from 'pg'
+import { user, req } from '@tests/utils'
 
 describe('CreateUserController integration tests', () => {
-  const user = new User({
-    name: 'joe',
-    lastName: 'doe',
-    email: 'joe.doe@exemple.com',
-    password: '12345678'
-  })
-
-  const req = {} as NextRequest
-
   let client: Client
 
   beforeAll(async () => {
