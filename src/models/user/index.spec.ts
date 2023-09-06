@@ -56,4 +56,15 @@ describe('Model user tests', () => {
       })
     }).toThrow()
   })
+
+  it('should not return password in toJSON method', () => {
+    const user = new User({
+      name: 'joe',
+      lastName: 'doe',
+      email: 'joe.doe@exemple.com',
+      password: '12345678'
+    })
+
+    expect(user.toJSON()).not.toHaveProperty('password')
+  })
 })
