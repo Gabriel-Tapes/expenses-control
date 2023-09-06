@@ -53,6 +53,18 @@ describe('PostgresGainsRepository tests', () => {
     expect(value).toEqual(gain.value.toString())
   })
 
+  it('should get owner', async () => {
+    const owner = await gainsRepository.getOwner(user.id)
+
+    expect(owner).toEqual(user)
+  })
+
+  it('should return null if a non-matching ownerId is provided', async () => {
+    const owner = await gainsRepository.getOwner(randomUUID())
+
+    expect(owner).toBeNull()
+  })
+
   it('should get gain by id', async () => {
     await gainsRepository.createGain(gain)
 
@@ -61,7 +73,7 @@ describe('PostgresGainsRepository tests', () => {
     expect(gottenGain).toEqual(gain)
   })
 
-  it('should return null if an non-matching id is provided', async () => {
+  it('should return null if a non-matching id is provided', async () => {
     await gainsRepository.createGain(gain)
 
     const gottenGain = await gainsRepository.getGain(
@@ -72,7 +84,7 @@ describe('PostgresGainsRepository tests', () => {
     expect(gottenGain).toBeNull()
   })
 
-  it('should return null if an non-matching ownerId is provided', async () => {
+  it('should return null if a non-matching ownerId is provided', async () => {
     await gainsRepository.createGain(gain)
 
     const gottenGain = await gainsRepository.getGain(randomUUID(), gain.id)

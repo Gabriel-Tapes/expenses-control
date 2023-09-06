@@ -1,8 +1,10 @@
 import { type Gain } from '@/models/gain'
+import { type User } from '@/models/user'
 import { type EditGainDTO } from '@/types/DTO'
 
 export interface IGainsRepository {
   createGain(gain: Gain): Promise<void>
+  getOwner(ownerId: string): Promise<User | null>
   getGain(ownerId: string, gainId: string): Promise<Gain | null>
   getAllGains(ownerId: string): Promise<Gain[]>
   getGainsByDatePeriod(
