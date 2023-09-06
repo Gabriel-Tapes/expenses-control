@@ -54,6 +54,21 @@ describe('PostgresCategoriesRepository tests', () => {
     expect(gottenCategory).toBeNull()
   })
 
+  it('should get all categories', async () => {
+    await categoriesRepository.addCategory(category)
+
+    const gottenCategories = await categoriesRepository.getAllCategories()
+
+    expect(gottenCategories.length).toBe(1)
+    expect(gottenCategories[0]).toEqual(category)
+  })
+
+  it('should return an empty list if not exists categories in database', async () => {
+    const gottenCategories = await categoriesRepository.getAllCategories()
+
+    expect(gottenCategories.length).toBe(0)
+  })
+
   it('should edit a category', async () => {
     await categoriesRepository.addCategory(category)
 
