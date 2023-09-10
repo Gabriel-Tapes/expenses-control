@@ -20,7 +20,7 @@ export class InMemoryGainsRepository implements IGainsRepository {
           owner: new User(
             {
               name: gain.owner.name,
-              lastName: gain.owner.name,
+              lastName: gain.owner.lastName,
               email: gain.owner.email,
               password: gain.owner.password
             },
