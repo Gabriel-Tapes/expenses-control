@@ -45,7 +45,7 @@ describe('Entity gain tests', () => {
     expect(gain.toJSON()).toEqual({
       id: gain.id,
       owner: gain.owner.toJSON(),
-      value: gain.value,
+      value: gain.value.toString(),
       createdAt: gain.createdAt.toISOString(),
       updatedAt: gain.updatedAt.toISOString()
     })

@@ -113,7 +113,7 @@ export class Expense {
       owner: this.props.owner.toJSON(),
       category: this.props.category.toJSON(),
       description: this.props.description,
-      cost: this.props.cost,
+      cost: this.props.cost.toString(),
       paidAt: this.props.paidAt,
       createdAt: this.props.createdAt.toISOString(),
       updatedAt: this.props.updatedAt.toISOString()

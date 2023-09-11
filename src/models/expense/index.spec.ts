@@ -61,7 +61,7 @@ describe('model expense tests', () => {
       owner: expense.owner.toJSON(),
       category: expense.category.toJSON(),
       description: expense.description,
-      cost: expense.cost,
+      cost: expense.cost.toString(),
       paidAt: expense.paidAt,
       createdAt: expense.createdAt.toISOString(),
       updatedAt: expense.updatedAt.toISOString()
