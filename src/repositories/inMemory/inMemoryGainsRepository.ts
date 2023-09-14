@@ -73,7 +73,9 @@ export class InMemoryGainsRepository implements IGainsRepository {
   async deleteGain(ownerId: string, gainId: string): Promise<number> {
     const initialLength = this.gains.length
 
-    this.gains.filter(gain => gain.owner.id !== ownerId && gain.id !== gainId)
+    this.gains = this.gains.filter(
+      gain => gain.owner.id !== ownerId && gain.id !== gainId
+    )
 
     if (this.gains.length === initialLength) return 1
 
