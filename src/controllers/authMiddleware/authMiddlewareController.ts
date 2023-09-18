@@ -12,9 +12,8 @@ export class AuthMiddlewareController {
         req.headers.get('authorization')
       )
 
-      const { error, id, message } = await this.authMiddlewareUseCase.execute(
-        token
-      )
+      const { error, id, message } =
+        await this.authMiddlewareUseCase.execute(token)
 
       if (!error) {
         const reqHeaders = new Headers(req.headers)

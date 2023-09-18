@@ -4,7 +4,7 @@ import { ZodError } from 'zod'
 import { GetAllGainsDTOSchema } from '@/types/DTO/get/getAllGainsDTO'
 
 export class GetAllGainsController {
-  constructor(private getAllGainsUseCase: GetAllGainsUseCase) { }
+  constructor(private getAllGainsUseCase: GetAllGainsUseCase) {}
 
   async handle(req: NextRequest) {
     const userId = req.headers.get('userId')
