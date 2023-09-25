@@ -1,4 +1,4 @@
-FROM postgres:14.1-alpine
+FROM docker.io/postgres:14.1-alpine
 
 WORKDIR /app
 
