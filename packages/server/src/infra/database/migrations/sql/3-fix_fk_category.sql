@@ -1,0 +1,7 @@
+BEGIN;
+  ALTER TABLE expenses 
+    DROP CONSTRAINT FK_CATEGORY;
+  ALTER TABLE expenses 
+    ADD CONSTRAINT FK_CATEGORY
+      FOREIGN KEY(categoryId) REFERENCES categories(id);
+COMMIT;
