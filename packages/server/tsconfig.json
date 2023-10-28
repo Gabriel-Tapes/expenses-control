@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "ESNext"
+    ],
+    "baseUrl": "./",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ],
+      "@tests/*": [
+        "tests/*"
+      ]
+    }
+  },
+  "include": [
+    "./src/**/*",
+    "./tests/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
