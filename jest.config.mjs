@@ -1,13 +1,8 @@
-import nextJest from 'next/jest.js'
-
-const creatJestConfig = nextJest({
-  dir: './'
-})
-
-/** @type {import('jest').Config} */
-const config = {
-  setupFilesAfterEnv: ['<rootDir>/.jest/setup.ts'],
-  testEnvironment: 'node'
+const jestConfig = {
+  preset: 'ts-jest',
+  clearMocks: true,
+  projects: ['<rootDir>/packages/**/jest.config.js'],
+  testMatch: ['*.spec.ts', '*.spec.tsx']
 }
 
-export default creatJestConfig(config)
+export default jestConfig
