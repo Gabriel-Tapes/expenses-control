@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch ./src/index.ts",
     "build": "tsup src/**/*.ts",
     "test": "jest --runInBand",
     "test:unit": "jest src/",
