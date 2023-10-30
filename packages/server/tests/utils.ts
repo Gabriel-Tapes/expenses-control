@@ -3,7 +3,7 @@ import { Category } from '@/models/category'
 import { Expense } from '@/models/expense'
 import { Gain } from '@/models/gain'
 import { User } from '@/models/user'
-import { type NextRequest } from 'next/server'
+import { Request, Response } from 'express'
 
 export const user = new User({
   name: 'joe',
@@ -24,5 +24,8 @@ export const expense = new Expense({
 })
 
 export const req = {
-  headers: new Headers()
-} as NextRequest
+  headers: {},
+  body: {}
+} as Request
+
+export const res = {} as unknown as Response
