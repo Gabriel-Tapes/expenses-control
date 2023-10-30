@@ -1,5 +1,0 @@
-export * from './addCategory'
-export * from './getCategory'
-export * from './getAllCategories'
-export * from './editCategory'
-export * from './deleteCategory'

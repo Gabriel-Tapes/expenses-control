@@ -1,7 +1,0 @@
-export * from './createGain'
-export * from './getOwner'
-export * from './getGain'
-export * from './getAllGains'
-export * from './getGainsByDatePeriod'
-export * from './editGain'
-export * from './deleteGain'
