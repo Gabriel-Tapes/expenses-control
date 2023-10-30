@@ -8,11 +8,11 @@ const envFile =
   process.env.NODE_ENV === 'test'
     ? '.env.test'
     : process.env.NODE_ENV === 'production'
-    ? '.env'
-    : '.env.local'
+      ? '.env'
+      : '.env.local'
 
 dotenv.config({
-  path: resolve(process.cwd(), envFile)
+  path: resolve(envFile)
 })
 
 const config: PoolConfig = {
