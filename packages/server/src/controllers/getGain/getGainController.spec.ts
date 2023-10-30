@@ -1,12 +1,17 @@
 import { IGainsRepository } from '@/repositories/IGainsRepository'
 import { GetGainUseCase } from './getGainUseCase'
 import { GetGainController } from './getGainController'
-import { gain, req } from '@tests/utils'
+import { gain, req, res } from '@tests/utils'
 import { randomUUID } from 'crypto'
 
 describe('GetGainController tests', () => {
   const getGainUseCase = new GetGainUseCase({} as IGainsRepository)
   const getGainController = new GetGainController(getGainUseCase)
+
+  beforeAll(() => {
+    res.status = jest.fn().mockReturnThis()
+    res.json = jest.fn().mockReturnThis()
+  })
 
   beforeEach(() => {
     getGainUseCase.execute = jest.fn().mockImplementation(({ ownerId, id }) => {
@@ -15,92 +20,84 @@ describe('GetGainController tests', () => {
       return null
     })
 
-    req.headers.set('userId', gain.owner.id)
+    req.headers['x-user-id'] = gain.owner.id
   })
 
   it('should return status 200 and gain', async () => {
-    req.json = jest.fn().mockResolvedValue({ id: gain.id })
+    req.body = { id: gain.id }
 
-    const res = await getGainController.handle(req)
-    const body = await res.json()
+    await getGainController.handle(req, res)
 
-    expect(res.status).toBe(200)
-    expect(body.gain).toEqual(gain.toJSON())
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json).toHaveBeenCalledWith({ gain })
   })
 
   it('should return status 404 if a non-matching ownerId', async () => {
-    req.headers.set('userId', randomUUID())
-    req.json = jest.fn().mockResolvedValue({ id: gain.id })
+    req.headers['x-user-id'] = randomUUID()
+    req.body = { id: gain.id }
 
-    const res = await getGainController.handle(req)
-    const body = await res.json()
+    await getGainController.handle(req, res)
 
-    expect(res.status).toBe(404)
-    expect(body.error).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(404)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 404 if a non-matching id', async () => {
-    req.json = jest.fn().mockResolvedValue({ id: randomUUID() })
+    req.body = { id: randomUUID() }
 
-    const res = await getGainController.handle(req)
-    const body = await res.json()
+    await getGainController.handle(req, res)
 
-    expect(res.status).toBe(404)
-    expect(body.error).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(404)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 403 if ownerId is not provided', async () => {
-    req.headers.delete('userId')
-    req.json = jest.fn().mockResolvedValue({ id: gain.id })
+    req.headers['x-user-id'] = undefined
+    req.body = { id: gain.id }
 
-    const res = await getGainController.handle(req)
-    const body = await res.json()
+    await getGainController.handle(req, res)
 
-    expect(res.status).toBe(403)
-    expect(body.error).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(403)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 400 if an invalid ownerId is provided', async () => {
-    req.headers.set('userId', 'invalid owner id')
-    req.json = jest.fn().mockResolvedValue({ id: gain.id })
+    req.headers['x-user-id'] = 'invalid owner id'
+    req.body = { id: gain.id }
 
-    const res = await getGainController.handle(req)
-    const body = await res.json()
+    await getGainController.handle(req, res)
 
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 400 if an invalid gainId is provided', async () => {
-    req.json = jest.fn().mockResolvedValue({ id: 'invalid gainId' })
+    req.body = { id: 'invalid gainId' }
 
-    const res = await getGainController.handle(req)
-    const body = await res.json()
+    await getGainController.handle(req, res)
 
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 400 if gainId is not provided', async () => {
-    req.json = jest.fn().mockResolvedValue({})
+    req.body = {}
 
-    const res = await getGainController.handle(req)
-    const body = await res.json()
+    await getGainController.handle(req, res)
 
-    expect(res.status).toBe(400)
-    expect(body).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 500 if an error occurs', async () => {
-    req.json = jest.fn().mockResolvedValue({ id: gain.id })
+    req.body = { id: gain.id }
     getGainUseCase.execute = jest
       .fn()
       .mockRejectedValue(new Error('an error occurs'))
 
-    const res = await getGainController.handle(req)
-    const body = await res.json()
+    await getGainController.handle(req, res)
 
-    expect(res.status).toBe(500)
-    expect(body.error).toBe('an error occurs')
+    expect(res.status).toHaveBeenCalledWith(500)
+    expect(res.json).toHaveBeenCalledWith({ error: 'an error occurs' })
   })
 })

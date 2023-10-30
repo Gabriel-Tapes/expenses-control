@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { Request, Response } from 'express'
 import { EditUserUseCase } from './editUserUseCase'
 import { EditUserDTOSchema } from '@/types/DTO'
 import { ZodError } from 'zod'
@@ -6,14 +6,14 @@ import { ZodError } from 'zod'
 export class EditUserController {
   constructor(private editUserUseCase: EditUserUseCase) {}
 
-  async handle(req: NextRequest) {
-    const userId = req.headers.get('x-user-id')
+  async handle(req: Request, res: Response) {
+    const userId = req.headers['x-user-id']
 
     try {
       const { id, name, lastName, password } =
         await EditUserDTOSchema.parseAsync({
           id: userId,
-          ...(await req.json())
+          ...req.body
         })
 
       const editedUser = await this.editUserUseCase.execute({
@@ -24,29 +24,20 @@ export class EditUserController {
       })
 
       if (!editedUser)
-        return NextResponse.json(
-          {
-            error: 'user not found'
-          },
-          { status: 404 }
-        )
+        return res.status(404).json({
+          error: 'user not found'
+        })
 
-      return NextResponse.json({ user: editedUser })
+      return res.status(200).json({ user: editedUser })
     } catch (err) {
       if ((err as Error).name === 'ZodError')
-        return NextResponse.json(
-          {
-            errors: (err as ZodError).issues
-          },
-          { status: 400 }
-        )
+        return res.status(400).json({
+          errors: (err as ZodError).issues
+        })
 
-      return NextResponse.json(
-        {
-          error: (err as Error).message
-        },
-        { status: 500 }
-      )
+      return res.status(500).json({
+        error: (err as Error).message
+      })
     }
   }
 }

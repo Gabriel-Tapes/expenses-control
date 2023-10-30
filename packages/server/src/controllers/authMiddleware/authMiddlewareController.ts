@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { Request, Response, NextFunction } from 'express'
 import { AuthMiddlewareUseCase } from './authMiddlewareUseCase'
 import { AuthMiddlewareDTOSchema } from '@/types/DTO'
 import { ZodError } from 'zod'
@@ -6,53 +6,41 @@ import { ZodError } from 'zod'
 export class AuthMiddlewareController {
   constructor(private authMiddlewareUseCase: AuthMiddlewareUseCase) {}
 
-  async handle(req: NextRequest) {
+  async handle(req: Request, res: Response, next: NextFunction) {
     try {
-      const token = AuthMiddlewareDTOSchema.parse(
-        req.headers.get('authorization')
-      )
+      const token = AuthMiddlewareDTOSchema.parse(req.headers?.authorization)
 
-      const { error, id, message } = await this.authMiddlewareUseCase.execute(
-        token
-      )
+      const { error, id, message } =
+        await this.authMiddlewareUseCase.execute(token)
 
       if (!error) {
-        const reqHeaders = new Headers(req.headers)
-        reqHeaders.set('x-user-id', id as string)
+        req.headers['x-user-id'] = id
 
-        return NextResponse.next({
-          request: {
-            headers: reqHeaders
-          }
+        return next()
+      }
+
+      if (error === 1) {
+        res.set('www-authenticate', 'Bearer')
+
+        return res.status(403).json({
+          success: false,
+          message
         })
       }
 
-      const res = new NextResponse(
-        JSON.stringify({
-          success: false,
-          message
-        }),
-        { status: error === 1 ? 403 : 400 }
-      )
-
-      if (error === 1) res.headers.set('www-authenticate', 'Bearer')
-
-      return res
+      return res.status(400).json({
+        success: false,
+        message
+      })
     } catch (err) {
       if ((err as Error).name === 'ZodError')
-        return NextResponse.json(
-          {
-            errors: (err as ZodError).issues
-          },
-          { status: 400 }
-        )
+        return res.status(400).json({
+          errors: (err as ZodError).issues
+        })
 
-      return NextResponse.json(
-        {
-          error: (err as Error).message
-        },
-        { status: 500 }
-      )
+      return res.status(500).json({
+        error: (err as Error).message
+      })
     }
   }
 }

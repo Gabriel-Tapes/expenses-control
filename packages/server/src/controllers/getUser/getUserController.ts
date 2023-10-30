@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { Request, Response } from 'express'
 import { GetUserUseCase } from './getUserUseCase'
 import { GetUserDTOSchema } from '@/types/DTO/get/getUserDTO'
 import { ZodError } from 'zod'
@@ -6,31 +6,24 @@ import { ZodError } from 'zod'
 export class GetUserController {
   constructor(private getUserUseCase: GetUserUseCase) {}
 
-  async handle(req: NextRequest) {
+  async handle(req: Request, res: Response) {
     try {
-      const id = await GetUserDTOSchema.parseAsync(req.headers.get('x-user-id'))
+      const id = await GetUserDTOSchema.parseAsync(req.headers['x-user-id'])
 
       const user = await this.getUserUseCase.execute(id)
 
-      if (!user)
-        return NextResponse.json({ error: 'user not found' }, { status: 404 })
+      if (!user) return res.status(404).json({ error: 'user not found' })
 
-      return NextResponse.json({ user })
+      return res.status(200).json({ user })
     } catch (err) {
       if ((err as Error).name === 'ZodError')
-        return NextResponse.json(
-          {
-            errors: (err as ZodError).issues
-          },
-          { status: 400 }
-        )
+        return res.status(400).json({
+          errors: (err as ZodError).issues
+        })
 
-      return NextResponse.json(
-        {
-          error: (err as Error).message
-        },
-        { status: 500 }
-      )
+      return res.status(500).json({
+        error: (err as Error).message
+      })
     }
   }
 }

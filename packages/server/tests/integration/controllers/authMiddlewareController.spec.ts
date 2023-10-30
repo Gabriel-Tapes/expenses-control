@@ -1,16 +1,15 @@
 import { randomUUID } from 'crypto'
 import { SignJWT } from 'jose'
-import { NextRequest } from 'next/server'
 import { authMiddlewareController } from '@/controllers/authMiddleware'
+import { req, res } from '@tests/utils'
 
 describe('AuthMiddlewareController tests', () => {
   const id = randomUUID()
   const secret = new TextEncoder().encode(process.env.JWT_SECRET)
-  const req = {
-    headers: new Headers()
-  } as NextRequest
 
   let validToken: string
+
+  const next = jest.fn().mockReturnThis()
 
   beforeAll(async () => {
     const token = await new SignJWT({ id })
@@ -18,6 +17,14 @@ describe('AuthMiddlewareController tests', () => {
       .setExpirationTime('1w')
       .sign(secret)
     validToken = `Bearer ${token}`
+
+    res.set = jest.fn().mockReturnThis()
+    res.status = jest.fn().mockReturnThis()
+    res.json = jest.fn().mockReturnThis()
+  })
+
+  beforeEach(() => {
+    req.headers = {}
   })
 
   afterEach(() => {
@@ -25,40 +32,39 @@ describe('AuthMiddlewareController tests', () => {
   })
 
   it('should set userId header', async () => {
-    req.headers.set('authorization', validToken)
+    req.headers.authorization = validToken
 
-    const res = await authMiddlewareController.handle(req)
-    const userId = res.headers.get('x-middleware-request-x-user-id')
+    await authMiddlewareController.handle(req, res, next)
 
-    expect(userId).toBeTruthy()
-    expect(userId).toEqual(id)
+    expect(req.headers['x-user-id']).toBeTruthy()
+    expect(req.headers['x-user-id']).toEqual(id)
+    expect(next).toHaveBeenCalled()
   })
 
   it('should return status 400 if an invalid token is provided', async () => {
-    req.headers.set('authorization', 'an invalid token')
+    req.headers.authorization = 'an invalid token'
 
-    const res = await authMiddlewareController.handle(req)
-    expect(res.status).toBe(400)
+    await authMiddlewareController.handle(req, res, next)
 
-    const body = await res.json()
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
   })
 
   it('should return status 403 if error with status 1 is returned', async () => {
-    req.headers.set('authorization', validToken)
+    req.headers.authorization = validToken
     jest.useFakeTimers()
 
     const eightDays = 1000 * 60 * 60 * 24 * 8
 
     jest.setSystemTime(Date.now() + eightDays)
 
-    const res = await authMiddlewareController.handle(req)
-    expect(res.status).toBe(403)
+    await authMiddlewareController.handle(req, res, next)
 
-    const body = await res.json()
-    const headers = res.headers
-    expect(body.message).toBe('token expired')
-    expect(headers.get('www-authenticate')).toBe('Bearer')
+    expect(res.set).toHaveBeenCalledWith('www-authenticate', 'Bearer')
+    expect(res.status).toHaveBeenCalledWith(403)
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'token expired',
+      success: false
+    })
   })
 
   it('should return status 400 if error with status 2 is returned', async () => {
@@ -68,12 +74,11 @@ describe('AuthMiddlewareController tests', () => {
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('1w')
       .sign(new TextEncoder().encode('any other secret'))
-    req.headers.set('authorization', `Bearer ${otherJwt}`)
+    req.headers.authorization = `Bearer ${otherJwt}`
 
-    const res = await authMiddlewareController.handle(req)
-    expect(res.status).toBe(400)
+    await authMiddlewareController.handle(req, res, next)
 
-    const body = await res.json()
-    expect(body.message).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 })

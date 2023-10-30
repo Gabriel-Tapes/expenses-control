@@ -3,7 +3,7 @@ import {
   InMemoryUsersRepository
 } from '@/repositories/inMemory'
 import { GetGainsByDateUseCase } from './getGainsByDateUseCase'
-import { gain, req } from '@tests/utils'
+import { gain } from '@tests/utils'
 import { randomUUID } from 'crypto'
 
 describe('GetGainsUseCase tests', () => {
@@ -24,8 +24,8 @@ describe('GetGainsUseCase tests', () => {
       endDate: new Date(gain.createdAt.getTime() + 10)
     })
 
-    expect(gains.length).toBe(1)
-    expect(gains[0]).toEqual(gain)
+    expect(gains?.length).toBe(1)
+    expect(gains ? gains[0] : undefined).toEqual(gain)
   })
 
   it('should return null if owner not exists in database', async () => {
@@ -45,6 +45,6 @@ describe('GetGainsUseCase tests', () => {
       endDate: new Date(gain.createdAt.getTime() + 20)
     })
 
-    expect(gains.length).toBe(0)
+    expect(gains?.length).toBe(0)
   })
 })

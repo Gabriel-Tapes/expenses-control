@@ -1,13 +1,18 @@
 import { randomUUID } from 'crypto'
 import { deleteUserController } from '@/controllers/deleteUser'
 import { PostgresUsersRepository } from '@/repositories/implementations'
-import { user, req } from '@tests/utils'
+import { user, req, res } from '@tests/utils'
 
 describe('DeleteUserController tests', () => {
   const usersRepository = new PostgresUsersRepository()
 
+  beforeAll(() => {
+    res.status = jest.fn().mockReturnThis()
+    res.json = jest.fn().mockReturnThis()
+  })
+
   beforeEach(async () => {
-    req.headers.set('userId', user.id)
+    req.headers['x-user-id'] = user.id
 
     await usersRepository.createUser(user)
   })
@@ -17,22 +22,22 @@ describe('DeleteUserController tests', () => {
   })
 
   it('should return status 204 if delete user successfully', async () => {
-    const res = await deleteUserController.handle(req)
+    await deleteUserController.handle(req, res)
 
-    expect(res.status).toBe(204)
+    expect(res.status).toHaveBeenCalledWith(204)
   })
 
   it('should return status 404 if user not found', async () => {
-    req.headers.set('userId', randomUUID())
-    const res = await deleteUserController.handle(req)
+    req.headers['x-user-id'] = randomUUID()
+    await deleteUserController.handle(req, res)
 
-    expect(res.status).toBe(404)
+    expect(res.status).toHaveBeenCalledWith(404)
   })
 
   it('should return 400 if an invalid id is provided', async () => {
-    req.headers.set('userId', 'invalid uuid')
-    const res = await deleteUserController.handle(req)
+    req.headers['x-user-id'] = 'invalid uuid'
+    await deleteUserController.handle(req, res)
 
-    expect(res.status).toBe(400)
+    expect(res.status).toHaveBeenCalledWith(400)
   })
 })

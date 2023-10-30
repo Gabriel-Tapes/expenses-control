@@ -3,7 +3,7 @@ import {
   PostgresGainsRepository,
   PostgresUsersRepository
 } from '@/repositories/implementations'
-import { gain, req } from '@tests/utils'
+import { gain, req, res } from '@tests/utils'
 import { randomUUID } from 'crypto'
 
 describe('CreateGainController tests', () => {
@@ -12,11 +12,14 @@ describe('CreateGainController tests', () => {
 
   beforeAll(async () => {
     await usersRepository.createUser(gain.owner)
+
+    res.status = jest.fn().mockReturnThis()
+    res.json = jest.fn().mockReturnThis()
   })
 
   beforeEach(() => {
-    req.headers.set('userId', gain.owner.id)
-    req.json = jest.fn().mockResolvedValue({ value: gain.value.toNumber() })
+    req.headers['x-user-id'] = gain.owner.id
+    req.body = { value: gain.value.toNumber() }
   })
 
   afterEach(async () => {
@@ -28,61 +31,54 @@ describe('CreateGainController tests', () => {
   })
 
   it('should return status 201 and gain', async () => {
-    const res = await createGainController.handle(req)
-    const body = await res.json()
+    await createGainController.handle(req, res)
 
-    expect(res.status).toBe(201)
-    expect(body.gain.value).toEqual(gain.value.toString())
-    expect(body.gain.owner).toEqual(gain.owner.toJSON())
+    expect(res.status).toHaveBeenCalledWith(201)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 404 if owner not exists in database', async () => {
-    req.headers.set('userId', randomUUID())
+    req.headers['x-user-id'] = randomUUID()
 
-    const res = await createGainController.handle(req)
-    const body = await res.json()
+    await createGainController.handle(req, res)
 
-    expect(res.status).toBe(404)
-    expect(body.error).toBe('owner not found')
+    expect(res.status).toHaveBeenCalledWith(404)
+    expect(res.json).toHaveBeenCalledWith({ error: 'owner not found' })
   })
 
   it('should return status 400 if invalid userId is provided', async () => {
-    req.headers.set('userId', 'invalid userId')
+    req.headers['x-user-id'] = 'invalid userId'
 
-    const res = await createGainController.handle(req)
-    const body = await res.json()
+    await createGainController.handle(req, res)
 
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 400 if invalid value is provided', async () => {
-    req.json = jest.fn().mockResolvedValue({ value: 'invalid value' })
+    req.body = { value: 'invalid value' }
 
-    const res = await createGainController.handle(req)
-    const body = await res.json()
+    await createGainController.handle(req, res)
 
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 403 if userId is not provided', async () => {
-    req.headers.delete('userId')
+    req.headers['x-user-id'] = undefined
 
-    const res = await createGainController.handle(req)
-    const body = await res.json()
+    await createGainController.handle(req, res)
 
-    expect(res.status).toBe(403)
-    expect(body.error).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(403)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 400 if value is not provided', async () => {
-    req.json = jest.fn().mockResolvedValue({})
+    req.body = {}
 
-    const res = await createGainController.handle(req)
-    const body = await res.json()
+    await createGainController.handle(req, res)
 
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 })

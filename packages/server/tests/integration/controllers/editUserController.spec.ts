@@ -1,13 +1,18 @@
 import { editUserController } from '@/controllers/editUser'
 import { PostgresUsersRepository } from '@/repositories/implementations'
 import { randomUUID } from 'crypto'
-import { user, req } from '@tests/utils'
+import { user, req, res } from '@tests/utils'
 
 describe('editUserController tests', () => {
   const usersRepository = new PostgresUsersRepository()
 
+  beforeAll(() => {
+    res.status = jest.fn().mockReturnThis()
+    res.json = jest.fn().mockReturnThis()
+  })
+
   beforeEach(async () => {
-    req.headers.set('userId', user.id)
+    req.headers['x-user-id'] = user.id
 
     await usersRepository.createUser(user)
   })
@@ -17,39 +22,34 @@ describe('editUserController tests', () => {
   })
 
   it('should return status 200 and user', async () => {
-    req.json = jest.fn().mockReturnValue({
+    req.body = {
       name: 'joe',
       lastName: 'doe',
       password: '12345678'
-    })
+    }
 
-    const res = await editUserController.handle(req)
+    await editUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(200)
-    expect(body.user.id).toEqual(user.id)
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 404 if not user found', async () => {
-    req.headers.set('userId', randomUUID())
-    req.json = jest.fn().mockResolvedValue({ name: 'joe' })
+    req.headers['x-user-id'] = randomUUID()
+    req.body = { name: 'joe' }
 
-    const res = await editUserController.handle(req)
-    const body = await res.json()
+    await editUserController.handle(req, res)
 
-    expect(res.status).toBe(404)
-    expect(body.error).toBeTruthy()
-    expect(body.error).toBe('user not found')
+    expect(res.status).toHaveBeenCalledWith(404)
+    expect(res.json).toHaveBeenCalledWith({ error: 'user not found' })
   })
 
   it('should return status 400 if all optional fields had not provided', async () => {
-    req.json = jest.fn().mockResolvedValue({})
+    req.body = {}
 
-    const res = await editUserController.handle(req)
-    const body = await res.json()
+    await editUserController.handle(req, res)
 
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 })

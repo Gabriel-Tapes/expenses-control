@@ -1,48 +1,41 @@
-import { IGainsRepository } from '@/repositories/IGainsRepository'
-import { GetGainsByDateUseCase } from './getGainsByDateUseCase'
+import { getGainsByDateController } from '@/controllers/getGainsByDate'
+import {
+  PostgresGainsRepository,
+  PostgresUsersRepository
+} from '@/repositories/implementations'
 import { gain, req, res } from '@tests/utils'
-import { GetGainsByDateController } from './getGainsByDateController'
 import { randomUUID } from 'crypto'
 
-describe('GetGainsByDateController tests', () => {
-  const getGainsByDateUseCase = new GetGainsByDateUseCase(
-    {} as IGainsRepository
-  )
+describe('getGainsByDateController integration tests', () => {
+  const usersRepository = new PostgresUsersRepository()
+  const gainsRepository = new PostgresGainsRepository()
 
-  const getGainsByDateController = new GetGainsByDateController(
-    getGainsByDateUseCase
-  )
+  beforeAll(async () => {
+    await usersRepository.createUser(gain.owner)
+    await gainsRepository.createGain(gain)
 
-  beforeAll(() => {
     res.status = jest.fn().mockReturnThis()
     res.json = jest.fn().mockReturnThis()
   })
 
   beforeEach(() => {
-    getGainsByDateUseCase.execute = jest
-      .fn()
-      .mockImplementation(({ ownerId, startDate, endDate }) => {
-        if (ownerId !== gain.owner.id) return null
-
-        if (startDate.getTime() > gain.createdAt.getTime()) return []
-
-        if (endDate.getTime() < gain.createdAt.getTime()) return []
-
-        return [gain.toJSON()]
-      })
-
     req.headers['x-user-id'] = gain.owner.id
+
     req.body = {
       startDate: new Date(gain.createdAt.getTime() - 10),
       endDate: new Date(gain.createdAt.getTime() + 10)
     }
   })
 
+  afterAll(async () => {
+    await usersRepository.deleteUser(gain.owner.id)
+  })
+
   it('should return status 200 and gains', async () => {
     await getGainsByDateController.handle(req, res)
 
     expect(res.status).toHaveBeenCalledWith(200)
-    expect(res.json).toHaveBeenCalledWith({ gains: [gain.toJSON()] })
+    expect(res.json).toHaveBeenCalledWith({ gains: [gain] })
   })
 
   it('should return status 200 and gains if startDate is later than endDate', async () => {
@@ -54,7 +47,7 @@ describe('GetGainsByDateController tests', () => {
     await getGainsByDateController.handle(req, res)
 
     expect(res.status).toHaveBeenCalledWith(200)
-    expect(res.json).toHaveBeenCalledWith({ gains: [gain.toJSON()] })
+    expect(res.json).toHaveBeenCalledWith({ gains: [gain] })
   })
 
   it('should return status 403 if not userId is provided', async () => {
@@ -63,9 +56,7 @@ describe('GetGainsByDateController tests', () => {
     await getGainsByDateController.handle(req, res)
 
     expect(res.status).toHaveBeenCalledWith(403)
-    expect(res.json).toHaveBeenCalledWith({
-      error: 'user is not authenticated'
-    })
+    expect(res.json).toHaveBeenCalledWith({ error: 'user is not authenticated' })
   })
 
   it('should return status 400 if an invalid userId is provided', async () => {
@@ -111,16 +102,5 @@ describe('GetGainsByDateController tests', () => {
 
     expect(res.status).toHaveBeenCalledWith(404)
     expect(res.json).toHaveBeenCalledWith({ error: 'user not found' })
-  })
-
-  it('should return status 500 if an error occurs', async () => {
-    getGainsByDateUseCase.execute = jest
-      .fn()
-      .mockRejectedValue(new Error('an error occurs'))
-
-    await getGainsByDateController.handle(req, res)
-
-    expect(res.status).toHaveBeenCalledWith(500)
-    expect(res.json).toHaveBeenCalledWith({ error: 'an error occurs' })
   })
 })

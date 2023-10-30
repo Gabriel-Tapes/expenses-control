@@ -2,14 +2,14 @@ import { randomUUID } from 'crypto'
 import { SignJWT } from 'jose'
 import { AuthMiddlewareController } from './authMiddlewareController'
 import { AuthMiddlewareUseCase } from './authMiddlewareUseCase'
-import { NextRequest } from 'next/server'
+import { NextFunction } from 'express'
+import { req, res } from '@tests/utils'
 
 describe('AuthMiddlewareController tests', () => {
   const id = randomUUID()
   const secret = new TextEncoder().encode(process.env.JWT_SECRET)
-  const req = {
-    headers: new Headers()
-  } as NextRequest
+
+  const next = jest.fn() as NextFunction
 
   const authMiddlewareUseCase = new AuthMiddlewareUseCase()
   let authMiddlewareController: AuthMiddlewareController
@@ -21,6 +21,10 @@ describe('AuthMiddlewareController tests', () => {
       .setExpirationTime('1w')
       .sign(secret)
     validToken = `Bearer ${token}`
+
+    res.set = jest.fn().mockReturnThis()
+    res.status = jest.fn().mockReturnThis()
+    res.json = jest.fn().mockReturnThis()
   })
 
   beforeEach(() => {
@@ -31,73 +35,75 @@ describe('AuthMiddlewareController tests', () => {
     authMiddlewareController = new AuthMiddlewareController(
       authMiddlewareUseCase
     )
+
+    req.headers = {}
   })
 
   it('should set userId header', async () => {
-    req.headers.set('authorization', validToken)
+    req.headers.authorization = validToken
 
-    const res = await authMiddlewareController.handle(req)
-    const userId = res.headers.get('x-middleware-request-x-user-id')
+    await authMiddlewareController.handle(req, res, next)
 
-    expect(userId).toBeTruthy()
-    expect(userId).toEqual(id)
+    expect(req.headers['x-user-id']).toBeTruthy()
+    expect(req.headers['x-user-id']).toEqual(id)
+    expect(next).toHaveBeenCalled()
   })
 
   it('should return status 400 if an invalid token is provided', async () => {
-    req.headers.set('authorization', 'an invalid token')
-    jest.spyOn(authMiddlewareUseCase, 'execute')
+    req.headers.authorization = 'an invalid token'
 
-    const res = await authMiddlewareController.handle(req)
-    const body = await res.json()
+    await authMiddlewareController.handle(req, res, next)
 
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
     expect(authMiddlewareUseCase.execute).not.toHaveBeenCalled()
+    expect(res.status).toHaveBeenCalledWith(400)
   })
 
   it('should return status 403 if error with status 1 is returned', async () => {
-    req.headers.set('authorization', validToken)
+    req.headers.authorization = validToken
     authMiddlewareUseCase.execute = jest
       .fn()
       .mockReturnValue(
         Promise.resolve({ error: 1, id: null, message: 'token expired' })
       )
 
-    const res = await authMiddlewareController.handle(req)
-    const body = await res.json()
-    const headers = res.headers
+    await authMiddlewareController.handle(req, res, next)
 
-    expect(res.status).toBe(403)
-    expect(body.message).toBe('token expired')
-    expect(headers.get('www-authenticate')).toBe('Bearer')
+    expect(res.set).toHaveBeenCalledWith('www-authenticate', 'Bearer')
+    expect(res.status).toHaveBeenCalledWith(403)
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'token expired',
+      success: false
+    })
   })
 
   it('should return status 400 if error with status 2 is returned', async () => {
-    req.headers.set('authorization', validToken)
+    req.headers.authorization = validToken
     authMiddlewareUseCase.execute = jest
       .fn()
       .mockReturnValue(
         Promise.resolve({ error: 2, id: null, message: 'something occured' })
       )
 
-    const res = await authMiddlewareController.handle(req)
-    const body = await res.json()
+    await authMiddlewareController.handle(req, res, next)
 
-    expect(res.status).toBe(400)
-    expect(body.message).toBe('something occured')
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'something occured',
+      success: false
+    })
   })
 
   it('should return status 500 if an error occurs', async () => {
-    req.headers.set('authorization', validToken)
+    req.headers.authorization = validToken
     authMiddlewareUseCase.execute = jest
       .fn()
       .mockRejectedValue(new Error('An error has been occured'))
 
-    const res = await authMiddlewareController.handle(req)
-    const body = await res.json()
+    await authMiddlewareController.handle(req, res, next)
 
-    expect(res.status).toBe(500)
-    expect(body.error).toBeTruthy()
-    expect(body.error).toBe('An error has been occured')
+    expect(res.status).toHaveBeenCalledWith(500)
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'An error has been occured'
+    })
   })
 })

@@ -37,9 +37,8 @@ describe('AuthMiddlewareUseCase tests', () => {
       .setExpirationTime('0s')
       .sign(secret)
 
-    const { error, id: userId } = await authMiddlewareUseCase.execute(
-      expiredToken
-    )
+    const { error, id: userId } =
+      await authMiddlewareUseCase.execute(expiredToken)
 
     expect(error).toBe(1)
     expect(userId).not.toBeTruthy()

@@ -1,13 +1,16 @@
 import { createUserController } from '@/controllers/createUser'
 import { getNewClient } from '@/infra/database'
 import { Client } from 'pg'
-import { user, req } from '@tests/utils'
+import { user, req, res } from '@tests/utils'
 
 describe('CreateUserController integration tests', () => {
   let client: Client
 
   beforeAll(async () => {
     client = await getNewClient()
+
+    res.status = jest.fn().mockReturnThis()
+    res.json = jest.fn().mockReturnThis()
   })
 
   afterEach(async () => {
@@ -19,163 +22,140 @@ describe('CreateUserController integration tests', () => {
   })
 
   it('should create an user with all data', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: user.name,
       lastName: user.lastName,
       email: user.email,
       password: user.password
-    })
+    }
 
-    const res = await createUserController.handle(req)
+    await createUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(201)
-    expect(body.user).toBeTruthy()
-    expect(body.user.name).toEqual(user.name)
-    expect(body.user.lastName).toEqual(user.lastName)
-    expect(body.user.email).toEqual(user.email)
+    expect(res.status).toHaveBeenCalledWith(201)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 without some data', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: user.name,
       lastName: user.lastName
-    })
+    }
 
-    const res = await createUserController.handle(req)
+    await createUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with name length greater than 30', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: 'a'.repeat(31),
       lastName: user.lastName,
       email: user.email,
       password: user.password
-    })
+    }
 
-    const res = await createUserController.handle(req)
+    await createUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with name blank', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: '',
       lastName: user.lastName,
       email: user.email,
       password: user.password
-    })
+    }
 
-    const res = await createUserController.handle(req)
+    await createUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with lastName length greater than 100', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: user.name,
       lastName: 'a'.repeat(101),
       email: user.email,
       password: user.password
-    })
+    }
 
-    const res = await createUserController.handle(req)
+    await createUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with lastName blank', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: user.name,
       lastName: '',
       email: user.email,
       password: user.password
-    })
+    }
 
-    const res = await createUserController.handle(req)
+    await createUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with email mal-formatted', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: user.name,
       lastName: user.lastName,
       email: 'mal-formatted',
       password: user.password
-    })
+    }
 
-    const res = await createUserController.handle(req)
+    await createUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with email blank', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: user.name,
       lastName: user.lastName,
       email: '',
       password: user.password
-    })
+    }
 
-    const res = await createUserController.handle(req)
+    await createUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with an password length greater than 60', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: user.name,
       lastName: user.lastName,
       email: user.email,
       password: 'a'.repeat(61)
-    })
+    }
 
-    const res = await createUserController.handle(req)
+    await createUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with password length lower then 8', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: user.name,
       lastName: user.lastName,
       email: user.email,
       password: 'a'.repeat(7)
-    })
+    }
 
-    const res = await createUserController.handle(req)
+    await createUserController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 })

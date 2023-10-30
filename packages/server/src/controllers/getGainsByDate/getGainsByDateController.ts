@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { Request, Response } from 'express'
 import { GetGainsByDateUseCase } from './getGainsByDateUseCase'
 import { ZodError } from 'zod'
 import { GetGainsByDateDTOSchema } from '@/types/DTO/get/getGainsByDateDTO'
@@ -6,18 +6,15 @@ import { GetGainsByDateDTOSchema } from '@/types/DTO/get/getGainsByDateDTO'
 export class GetGainsByDateController {
   constructor(private getGainsByDateUseCase: GetGainsByDateUseCase) {}
 
-  async handle(req: NextRequest) {
-    const userId = req.headers.get('userId')
+  async handle(req: Request, res: Response) {
+    const userId = req.headers['x-user-id']
 
     if (!userId)
-      return NextResponse.json(
-        { error: 'user is not authenticated' },
-        { status: 403 }
-      )
+      return res.status(403).json({ error: 'user is not authenticated' })
     try {
       const { ownerId, startDate, endDate } =
         await GetGainsByDateDTOSchema.parseAsync({
-          ...(await req.json()),
+          ...req.body,
           ownerId: userId
         })
 
@@ -27,21 +24,14 @@ export class GetGainsByDateController {
         endDate
       })
 
-      if (!gains)
-        return NextResponse.json({ error: 'user not found' }, { status: 404 })
+      if (!gains) return res.status(404).json({ error: 'user not found' })
 
-      return NextResponse.json({ gains })
+      return res.status(200).json({ gains })
     } catch (err) {
       if (err instanceof ZodError)
-        return NextResponse.json(
-          { errors: (err as ZodError).issues },
-          { status: 400 }
-        )
+        return res.status(400).json({ errors: (err as ZodError).issues })
 
-      return NextResponse.json(
-        { error: (err as Error).message },
-        { status: 500 }
-      )
+      return res.status(500).json({ error: (err as Error).message })
     }
   }
 }

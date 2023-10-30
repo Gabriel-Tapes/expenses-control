@@ -2,7 +2,7 @@ import { LoginUseCase } from './loginUseCase'
 import { LoginController } from './loginController'
 import { IUsersRepository } from '@/repositories/IUsersRepository'
 import { LoginDTO } from '@/types/DTO'
-import { user, req } from '@tests/utils'
+import { user, req, res } from '@tests/utils'
 
 describe('LoginController tests', () => {
   let loginUseCase: LoginUseCase
@@ -22,122 +22,104 @@ describe('LoginController tests', () => {
       })
 
     loginController = new LoginController(loginUseCase)
+
+    res.status = jest.fn().mockReturnThis()
+    res.json = jest.fn().mockReturnThis()
   })
 
   it('should login', async () => {
-    req.json = jest
-      .fn()
-      .mockResolvedValue({ email: user.email, password: user.password })
+    req.body = { email: user.email, password: user.password }
 
-    const res = await loginController.handle(req)
+    await loginController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(200)
-    expect(body.token).toBeTruthy()
-    expect(body.token).toEqual('jwt token')
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json).toHaveBeenCalledWith({ token: 'jwt token' })
   })
 
   it('should return status 404 if a wrong email is provided', async () => {
-    req.json = jest
-      .fn()
-      .mockResolvedValue({ email: 'wrong@test.dev', password: user.password })
+    req.body = { email: 'wrong@test.dev', password: user.password }
 
-    const res = await loginController.handle(req)
+    await loginController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(404)
-    expect(body.error).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(404)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return status 400 if a wrong password is provided', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       email: user.email,
       password: `${user.password} wrong`
-    })
+    }
 
-    const res = await loginController.handle(req)
+    await loginController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.error).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with email mal-formatted', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       email: 'mal-formatted',
       password: user.password
-    })
+    }
 
-    const res = await loginController.handle(req)
+    await loginController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with email blank', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       email: '',
       password: user.password
-    })
+    }
 
-    const res = await loginController.handle(req)
+    await loginController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with an password length greater than 60', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       email: user.email,
       password: 'a'.repeat(61)
-    })
+    }
 
-    const res = await loginController.handle(req)
+    await loginController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return errors and status 400 with password length lower then 8', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       email: user.email,
       password: 'a'.repeat(7)
-    })
+    }
 
-    const res = await loginController.handle(req)
+    await loginController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 
   it('should return 500 if an error occurs', async () => {
-    req.json = jest.fn().mockResolvedValue({
+    req.body = {
       name: user.name,
       lastName: user.lastName,
       email: user.email,
       password: user.password
-    })
+    }
 
     loginUseCase.execute = jest
       .fn()
       .mockRejectedValue(new Error('An error occurred'))
 
-    const res = await loginController.handle(req)
+    await loginController.handle(req, res)
 
-    const body = await res.json()
-
-    expect(res.status).toBe(500)
-    expect(body.error).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(500)
+    expect(res.json).toHaveBeenCalled()
   })
 })

@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { Request, Response } from 'express'
 import { type CreateUserUseCase } from './createUserUseCase'
 import { CreateUserDTOSchema } from '@/types/DTO'
 import { type ZodError } from 'zod'
@@ -6,10 +6,10 @@ import { type ZodError } from 'zod'
 export class CreateUserController {
   constructor(private createUserUseCase: CreateUserUseCase) {}
 
-  async handle(req: NextRequest) {
+  async handle(req: Request, res: Response) {
     try {
       const { name, lastName, email, password } =
-        await CreateUserDTOSchema.parseAsync(await req.json())
+        await CreateUserDTOSchema.parseAsync(req.body)
 
       const user = await this.createUserUseCase.execute({
         name,
@@ -18,22 +18,16 @@ export class CreateUserController {
         password
       })
 
-      return NextResponse.json({ user }, { status: 201 })
+      return res.status(201).json({ user })
     } catch (err) {
       if ((err as Error).name === 'ZodError')
-        return NextResponse.json(
-          {
-            errors: (err as ZodError).issues
-          },
-          { status: 400 }
-        )
+        return res.status(400).json({
+          errors: (err as ZodError).issues
+        })
       else
-        return NextResponse.json(
-          {
-            error: (err as Error).message
-          },
-          { status: 500 }
-        )
+        return res.status(500).json({
+          error: (err as Error).message
+        })
     }
   }
 }

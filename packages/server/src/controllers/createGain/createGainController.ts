@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { Request, Response } from 'express'
 import { CreateGainUseCase } from './createGainUseCase'
 import { ZodError } from 'zod'
 import { CreateGainDTOSchema } from '@/types/DTO'
@@ -6,18 +6,15 @@ import { CreateGainDTOSchema } from '@/types/DTO'
 export class CreateGainController {
   constructor(private createGainUseCase: CreateGainUseCase) {}
 
-  async handle(req: NextRequest) {
-    const userId = req.headers.get('userId')
+  async handle(req: Request, res: Response) {
+    const userId = req.headers['x-user-id']
 
     if (!userId)
-      return NextResponse.json(
-        { error: 'user is not authenticated' },
-        { status: 403 }
-      )
+      return res.status(403).json({ error: 'user is not authenticated' })
 
     try {
       const { value, ownerId } = await CreateGainDTOSchema.parseAsync({
-        ...(await req.json()),
+        ...req.body,
         ownerId: userId
       })
 
@@ -27,34 +24,22 @@ export class CreateGainController {
       })
 
       if (error === 1)
-        return NextResponse.json(
-          {
-            error: message
-          },
-          { status: 404 }
-        )
+        return res.status(404).json({
+          error: message
+        })
 
-      return NextResponse.json(
-        {
-          gain
-        },
-        { status: 201 }
-      )
+      return res.status(201).json({
+        gain
+      })
     } catch (err) {
       if (err instanceof ZodError)
-        return NextResponse.json(
-          {
-            errors: (err as ZodError).issues
-          },
-          { status: 400 }
-        )
+        return res.status(400).json({
+          errors: (err as ZodError).issues
+        })
 
-      return NextResponse.json(
-        {
-          error: (err as Error).message
-        },
-        { status: 500 }
-      )
+      return res.status(500).json({
+        error: (err as Error).message
+      })
     }
   }
 }

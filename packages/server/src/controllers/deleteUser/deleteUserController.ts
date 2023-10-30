@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { Response, Request } from 'express'
 import { DeleteUserUseCase } from './deleteUserUseCase'
 import { DeleteUserDTOSchema } from '@/types/DTO/delete/deleteUserDTO'
 import { ZodError } from 'zod'
@@ -6,33 +6,26 @@ import { ZodError } from 'zod'
 export class DeleteUserController {
   constructor(private deleteUserUseCase: DeleteUserUseCase) {}
 
-  async handle(req: NextRequest) {
+  async handle(req: Request, res: Response) {
     try {
       const userId = await DeleteUserDTOSchema.parseAsync(
-        req.headers.get('x-user-id')
+        req.headers['x-user-id']
       )
 
       const error = await this.deleteUserUseCase.execute(userId)
 
-      if (error)
-        return NextResponse.json({ error: 'user not found' }, { status: 404 })
+      if (error) return res.status(404).json({ error: 'user not found' })
 
-      return new NextResponse(null, { status: 204 })
+      return res.status(204)
     } catch (err) {
       if (err instanceof ZodError)
-        return NextResponse.json(
-          {
-            errors: (err as ZodError).issues
-          },
-          { status: 400 }
-        )
+        return res.status(400).json({
+          errors: (err as ZodError).issues
+        })
 
-      return NextResponse.json(
-        {
-          error: (err as Error).message
-        },
-        { status: 500 }
-      )
+      return res.status(500).json({
+        error: (err as Error).message
+      })
     }
   }
 }

@@ -1,17 +1,20 @@
 import { randomUUID } from 'crypto'
 import { PostgresUsersRepository } from '@/repositories/implementations'
 import { getUserController } from '@/controllers/getUser'
-import { user, req } from '@tests/utils'
+import { user, req, res } from '@tests/utils'
 
 describe('GetUserController tests', () => {
   const usersRepository = new PostgresUsersRepository()
 
   beforeAll(async () => {
     await usersRepository.createUser(user)
+
+    res.status = jest.fn().mockReturnThis()
+    res.json = jest.fn().mockReturnThis()
   })
 
   beforeEach(() => {
-    req.headers.set('userId', user.id)
+    req.headers['x-user-id'] = user.id
   })
 
   afterAll(async () => {
@@ -19,30 +22,27 @@ describe('GetUserController tests', () => {
   })
 
   it('should return status 200 and user', async () => {
-    const res = await getUserController.handle(req)
-    const body = await res.json()
+    await getUserController.handle(req, res)
 
-    expect(res.status).toBe(200)
-    expect(body).toEqual({ user: user.toJSON() })
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json).toHaveBeenCalledWith({ user })
   })
 
   it('should return status 404 if not found user', async () => {
-    req.headers.set('userId', randomUUID())
+    req.headers['x-user-id'] = randomUUID()
 
-    const res = await getUserController.handle(req)
-    const body = await res.json()
+    await getUserController.handle(req, res)
 
-    expect(res.status).toBe(404)
-    expect(body.error).toBe('user not found')
+    expect(res.status).toHaveBeenCalledWith(404)
+    expect(res.json).toHaveBeenCalledWith({ error: 'user not found' })
   })
 
   it('should return status 400 if an invalid id is provided', async () => {
-    req.headers.set('userId', 'invalid id')
+    req.headers['x-user-id'] = 'invalid id'
 
-    const res = await getUserController.handle(req)
-    const body = await res.json()
+    await getUserController.handle(req, res)
 
-    expect(res.status).toBe(400)
-    expect(body.errors).toBeTruthy()
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalled()
   })
 })
