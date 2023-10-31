@@ -2,7 +2,7 @@
   "name": "expenses-control",
   "version": "0.0.1",
   "dependencies": {
-    "zod": "^3.22.2"
+    "zod": "^3.22.3"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",
